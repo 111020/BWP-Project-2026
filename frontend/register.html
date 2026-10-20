@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Register for CampusSkillConnect to exchange academic and technical skills with students on your campus.">
+  <title>Register — CampusSkillConnect</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="auth-page">
+
+  <!-- Top Simple Header -->
+  <header class="auth-header">
+    <div class="container" style="display: flex; align-items: center; justify-content: space-between;">
+      <a href="index.html" class="brand-logo" id="register-brand-logo">
+        <span class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+        </span>
+        <span>CampusSkillConnect</span>
+      </a>
+
+      <a href="index.html" class="text-sm font-semibold text-secondary">&larr; Back to Home</a>
+    </div>
+  </header>
+
+  <!-- Registration Form Container -->
+  <main class="auth-container">
+    <div class="auth-card" style="max-width: 520px;">
+      <h1 class="auth-card-title">Create Student Account</h1>
+      <p class="auth-card-subtitle">Join your college peer learning network to start sharing and learning skills.</p>
+
+      <!-- Alert Message Box (dynamic) -->
+      <div id="auth-alert" class="alert alert-error" style="display: none;">
+        <span class="alert-icon">⚠</span>
+        <div id="auth-alert-message" style="flex: 1;"></div>
+      </div>
+
+      <form id="register-form" novalidate>
+        <!-- Full Name -->
+        <div class="form-group" id="group-name">
+          <label class="form-label" for="reg-name">Full Name <span class="required">*</span></label>
+          <input 
+            type="text" 
+            id="reg-name" 
+            name="name" 
+            class="form-control" 
+            placeholder="e.g. Alex Johnson" 
+            required 
+            autocomplete="name"
+          >
+          <div class="form-error" id="error-name">Please enter your full name.</div>
+        </div>
+
+        <!-- College Email -->
+        <div class="form-group" id="group-email">
+          <label class="form-label" for="reg-email">College Email <span class="required">*</span></label>
+          <input 
+            type="email" 
+            id="reg-email" 
+            name="email" 
+            class="form-control" 
+            placeholder="student@college.edu" 
+            required 
+            autocomplete="email"
+          >
+          <div class="form-hint">Use your institutional or student email.</div>
+          <div class="form-error" id="error-email">Please enter a valid email address.</div>
+        </div>
+
+        <!-- Department & Academic Year in 2 Columns -->
+        <div class="grid grid-2" style="gap: 16px;">
+          <div class="form-group" id="group-dept">
+            <label class="form-label" for="reg-dept">Department <span class="required">*</span></label>
+            <select id="reg-dept" name="department" class="form-select" required>
+              <option value="">Select Department</option>
+              <option value="Computer Science">Computer Science &amp; Eng.</option>
+              <option value="Information Technology">Information Technology</option>
+              <option value="Electronics & Communication">Electronics &amp; Comm.</option>
+              <option value="Mechanical Engineering">Mechanical Engineering</option>
+              <option value="Design & Multimedia">Design &amp; Multimedia</option>
+              <option value="Data Science & AI">Data Science &amp; AI</option>
+              <option value="Business Administration">Business Administration</option>
+              <option value="Other">Other Department</option>
+            </select>
+            <div class="form-error" id="error-dept">Please select your department.</div>
+          </div>
+
+          <div class="form-group" id="group-year">
+            <label class="form-label" for="reg-year">Academic Year <span class="required">*</span></label>
+            <select id="reg-year" name="year" class="form-select" required>
+              <option value="">Select Year</option>
+              <option value="1st Year">1st Year</option>
+              <option value="2nd Year">2nd Year</option>
+              <option value="3rd Year">3rd Year</option>
+              <option value="4th Year">4th Year</option>
+              <option value="Postgraduate">Postgraduate</option>
+            </select>
+            <div class="form-error" id="error-year">Please select your academic year.</div>
+          </div>
+        </div>
+
+        <!-- Password & Confirm Password in 2 Columns -->
+        <div class="grid grid-2" style="gap: 16px;">
+          <div class="form-group" id="group-pass">
+            <label class="form-label" for="reg-pass">Password <span class="required">*</span></label>
+            <input 
+              type="password" 
+              id="reg-pass" 
+              name="password" 
+              class="form-control" 
+              placeholder="At least 6 characters" 
+              required 
+              autocomplete="new-password"
+            >
+            <div class="form-error" id="error-pass">At least 6 characters required.</div>
+          </div>
+
+          <div class="form-group" id="group-confirm">
+            <label class="form-label" for="reg-confirm">Confirm Password <span class="required">*</span></label>
+            <input 
+              type="password" 
+              id="reg-confirm" 
+              name="confirmPassword" 
+              class="form-control" 
+              placeholder="Re-enter password" 
+              required 
+              autocomplete="new-password"
+            >
+            <div class="form-error" id="error-confirm">Passwords must match.</div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="btn-register-submit" style="width: 100%; margin-top: 10px;">
+          <span id="btn-text">Create Account</span>
+          <span id="btn-spinner" class="spinner spinner-sm" style="display: none; border-color: rgba(255,255,255,0.4); border-top-color: #fff;"></span>
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Already have an account? <a href="login.html" class="font-semibold" id="link-to-login">Sign In</a>
+      </div>
+
+      <!-- Development / Viva API Base label -->
+      <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-light); text-align: center;">
+        <button type="button" class="text-xs text-muted" onclick="openApiConfigModal()" style="text-decoration: underline;">
+          ⚙ Backend API settings: <span id="current-api-label"></span>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/app.js"></script>
+  <script>
+    // 1. Redirect if already authenticated
+    if (isAuthenticated()) {
+      window.location.href = 'dashboard.html';
+    }
+
+    // 2. Display current API base URL
+    const apiLabel = document.getElementById('current-api-label');
+    if (apiLabel) apiLabel.textContent = getApiBase();
+
+    // 3. Form elements
+    const form = document.getElementById('register-form');
+    const alertBox = document.getElementById('auth-alert');
+    const alertMsg = document.getElementById('auth-alert-message');
+    const submitBtn = document.getElementById('btn-register-submit');
+    const btnText = document.getElementById('btn-text');
+    const btnSpinner = document.getElementById('btn-spinner');
+
+    function showAlert(msg, isSuccess = false) {
+      alertBox.className = isSuccess ? 'alert alert-success' : 'alert alert-error';
+      alertBox.querySelector('.alert-icon').textContent = isSuccess ? '✓' : '⚠';
+      alertMsg.textContent = msg;
+      alertBox.style.display = 'flex';
+    }
+
+    function hideAlert() {
+      alertBox.style.display = 'none';
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+
+      const name = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const department = document.getElementById('reg-dept').value;
+      const year = document.getElementById('reg-year').value;
+      const password = document.getElementById('reg-pass').value;
+      const confirmPassword = document.getElementById('reg-confirm').value;
+
+      let valid = true;
+
+      // Validation
+      if (!name) {
+        document.getElementById('group-name').classList.add('has-error');
+        valid = false;
+      } else {
+        document.getElementById('group-name').classList.remove('has-error');
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email || !emailRegex.test(email)) {
+        document.getElementById('group-email').classList.add('has-error');
+        valid = false;
+      } else {
+        document.getElementById('group-email').classList.remove('has-error');
+      }
+
+      if (!department) {
+        document.getElementById('group-dept').classList.add('has-error');
+        valid = false;
+      } else {
+        document.getElementById('group-dept').classList.remove('has-error');
+      }
+
+      if (!year) {
+        document.getElementById('group-year').classList.add('has-error');
+        valid = false;
+      } else {
+        document.getElementById('group-year').classList.remove('has-error');
+      }
+
+      if (!password || password.length < 6) {
+        document.getElementById('group-pass').classList.add('has-error');
+        valid = false;
+      } else {
+        document.getElementById('group-pass').classList.remove('has-error');
+      }
+
+      if (password !== confirmPassword) {
+        document.getElementById('group-confirm').classList.add('has-error');
+        valid = false;
+      } else {
+        document.getElementById('group-confirm').classList.remove('has-error');
+      }
+
+      if (!valid) return;
+
+      // Set loading state
+      submitBtn.disabled = true;
+      btnText.style.display = 'none';
+      btnSpinner.style.display = 'inline-block';
+
+      try {
+        const payload = {
+          name,
+          email,
+          department,
+          year,
+          password
+        };
+
+        const result = await apiFetch('/auth/register', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+
+        if (result.success && result.data) {
+          // Backend confirmed registration success
+          showAlert('Account created successfully! Redirecting...', true);
+          showToast('Welcome to CampusSkillConnect!', 'success');
+
+          // If backend returns token automatically, log in directly
+          if (result.data.token || result.data.accessToken) {
+            setAuthToken(result.data.token || result.data.accessToken);
+            setAuthUser(result.data.user || { name, email, department, year });
+            setTimeout(() => {
+              window.location.href = 'dashboard.html';
+            }, 800);
+          } else {
+            // Otherwise redirect to login page
+            setTimeout(() => {
+              window.location.href = 'login.html?registered=true';
+            }, 1200);
+          }
+        } else {
+          // Backend returned error (e.g. email already exists, invalid data)
+          const errMsg = result.error || 'Registration failed. Please check your details and try again.';
+          showAlert(errMsg, false);
+        }
+      } catch (err) {
+        showAlert('An unexpected client error occurred. Please try again.', false);
+      } finally {
+        submitBtn.disabled = false;
+        btnText.style.display = 'inline';
+        btnSpinner.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

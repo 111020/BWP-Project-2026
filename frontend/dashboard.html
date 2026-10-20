@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="CampusSkillConnect Student Dashboard — View your learning stats, skills, matches, and session requests.">
+  <title>Dashboard — CampusSkillConnect</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="app-layout">
+
+  <!-- ========================================================================
+       Sidebar Navigation
+       ======================================================================== -->
+  <aside class="app-sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="brand-logo">
+        <span class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+        </span>
+        <span>SkillConnect</span>
+      </a>
+    </div>
+
+    <!-- Authenticated Student Mini Card -->
+    <div class="sidebar-user">
+      <div class="sidebar-avatar" data-user-avatar>?</div>
+      <div style="min-width: 0;">
+        <div class="sidebar-user-name" data-user-name>Loading...</div>
+        <div class="sidebar-user-role" data-user-dept>Student</div>
+      </div>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="sidebar-nav">
+      <ul style="display: flex; flex-direction: column; gap: 4px;">
+        <li class="nav-item">
+          <a href="dashboard.html" class="nav-menu-link" data-page="dashboard">
+            <span class="nav-menu-icon">📊</span>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="skills.html" class="nav-menu-link" data-page="skills">
+            <span class="nav-menu-icon">💡</span>
+            <span>Manage Skills</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="matches.html" class="nav-menu-link" data-page="matches">
+            <span class="nav-menu-icon">🤝</span>
+            <span>Find Matches</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="sessions.html" class="nav-menu-link" data-page="sessions">
+            <span class="nav-menu-icon">📅</span>
+            <span>Session Requests</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="profile.html" class="nav-menu-link" data-page="profile">
+            <span class="nav-menu-icon">👤</span>
+            <span>Student Profile</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Sidebar Footer -->
+    <div class="sidebar-footer">
+      <button class="nav-menu-link" style="width: 100%; border: none; text-align: left;" data-action="logout">
+        <span class="nav-menu-icon">🚪</span>
+        <span>Sign Out</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ========================================================================
+       Main Content Area
+       ======================================================================== -->
+  <div class="app-main">
+    <!-- Top Bar -->
+    <header class="app-topbar">
+      <div class="topbar-left">
+        <button class="mobile-toggle" id="mobile-sidebar-toggle" aria-label="Toggle Sidebar Menu">☰</button>
+        <div>
+          <h1 class="topbar-title">Student Dashboard</h1>
+          <div class="topbar-subtitle">Overview of your campus skill exchanges</div>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <!-- Backend Connection Indicator -->
+        <button class="backend-indicator" id="backend-indicator" title="Backend Server Status">
+          <span class="backend-dot" id="backend-dot"></span>
+          <span id="backend-text">Connecting...</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Page Body -->
+    <main class="app-content">
+      
+      <!-- Welcome Heading (populated dynamically from real profile) -->
+      <div style="margin-bottom: 28px;">
+        <h2 style="font-size: 1.75rem; margin-bottom: 6px;">
+          Welcome back, <span id="dashboard-user-greeting" style="color: var(--accent);">Student</span> 👋
+        </h2>
+        <p class="text-secondary" id="dashboard-user-subline">
+          Connect with peers to exchange knowledge and schedule collaborative sessions.
+        </p>
+      </div>
+
+      <!-- Backend Connection Alert Container (displays only if API offline) -->
+      <div id="connection-alert-area"></div>
+
+      <!-- Metric Stats Cards (populated strictly from backend API) -->
+      <div class="metrics-grid" id="dashboard-metrics-container">
+        
+        <!-- Metric 1: Skills Offered -->
+        <div class="metric-card">
+          <div class="metric-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+          </div>
+          <div>
+            <div class="metric-value" id="metric-skills-offered">--</div>
+            <div class="metric-label">Skills Offered</div>
+          </div>
+        </div>
+
+        <!-- Metric 2: Skills Wanted -->
+        <div class="metric-card">
+          <div class="metric-icon" style="background-color: #EFF6FF; color: #3B82F6;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+          </div>
+          <div>
+            <div class="metric-value" id="metric-skills-wanted">--</div>
+            <div class="metric-label">Skills Wanted</div>
+          </div>
+        </div>
+
+        <!-- Metric 3: Active Matches -->
+        <div class="metric-card">
+          <div class="metric-icon" style="background-color: #ECFDF5; color: #10B981;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </div>
+          <div>
+            <div class="metric-value" id="metric-matches">--</div>
+            <div class="metric-label">Compatible Matches</div>
+          </div>
+        </div>
+
+        <!-- Metric 4: Active Sessions -->
+        <div class="metric-card">
+          <div class="metric-icon" style="background-color: #FFFBEB; color: #F59E0B;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </div>
+          <div>
+            <div class="metric-value" id="metric-sessions">--</div>
+            <div class="metric-label">Session Requests</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions Grid -->
+      <div style="margin-bottom: 32px;">
+        <h3 style="font-size: 1.15rem; margin-bottom: 14px;">Quick Actions</h3>
+        <div class="grid grid-3">
+          <a href="skills.html" class="card card-hover" style="display: flex; align-items: center; gap: 14px; text-decoration: none;">
+            <div style="width: 42px; height: 42px; border-radius: 10px; background-color: var(--accent-light); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+              ＋
+            </div>
+            <div>
+              <div class="font-semibold" style="color: var(--text-primary); font-size: 0.95rem;">Manage Skills</div>
+              <div class="text-xs text-secondary">Add or remove skills you teach &amp; learn</div>
+            </div>
+          </a>
+
+          <a href="matches.html" class="card card-hover" style="display: flex; align-items: center; gap: 14px; text-decoration: none;">
+            <div style="width: 42px; height: 42px; border-radius: 10px; background-color: #ECFDF5; color: #10B981; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+              🤝
+            </div>
+            <div>
+              <div class="font-semibold" style="color: var(--text-primary); font-size: 0.95rem;">Find Peer Matches</div>
+              <div class="text-xs text-secondary">Discover compatible learning partners</div>
+            </div>
+          </a>
+
+          <a href="sessions.html" class="card card-hover" style="display: flex; align-items: center; gap: 14px; text-decoration: none;">
+            <div style="width: 42px; height: 42px; border-radius: 10px; background-color: #EFF6FF; color: #3B82F6; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+              📅
+            </div>
+            <div>
+              <div class="font-semibold" style="color: var(--text-primary); font-size: 0.95rem;">Session Schedule</div>
+              <div class="text-xs text-secondary">Track pending &amp; upcoming sessions</div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Recent Session Requests Section -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3 class="card-title">Recent Session Requests</h3>
+            <p class="text-xs text-secondary" style="margin-top: 2px;">Peer-to-peer session updates</p>
+          </div>
+          <a href="sessions.html" class="btn btn-outline btn-sm">View All Sessions &rarr;</a>
+        </div>
+
+        <div class="card-body" id="recent-sessions-container">
+          <!-- Populated dynamically via fetch. No hardcoded fake data! -->
+          <div class="loading-box">
+            <div class="spinner"></div>
+            <p class="text-sm text-secondary">Connecting to backend service...</p>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    // 1. Verify authentication
+    requireAuth();
+
+    // 2. Initialize layout
+    initAppLayout('dashboard');
+
+    // 3. Load dashboard data from backend API
+    async function loadDashboardData() {
+      const alertContainer = document.getElementById('connection-alert-area');
+      const sessionsContainer = document.getElementById('recent-sessions-container');
+      const greetingEl = document.getElementById('dashboard-user-greeting');
+      const sublineEl = document.getElementById('dashboard-user-subline');
+
+      // Check current cached user first
+      const cachedUser = getAuthUser();
+      if (cachedUser && cachedUser.name) {
+        greetingEl.textContent = cachedUser.name;
+        sublineEl.textContent = `${cachedUser.department || 'Department'} • ${cachedUser.year || 'Student'}`;
+      }
+
+      // First fetch /auth/me or /profile to verify session & get latest user info
+      const meResult = await apiFetch('/auth/me');
+      if (meResult.success && meResult.data) {
+        const user = meResult.data.user || meResult.data;
+        setAuthUser(user);
+        greetingEl.textContent = user.name || 'Student';
+        sublineEl.textContent = `${user.department || 'Student'} • ${user.year || 'Member'}`;
+      } else if (meResult.isNetworkError) {
+        renderErrorState(alertContainer, {
+          message: `Backend connection not established at ${getApiBase()}. Start your backend server to load real metrics and live session requests.`,
+          onRetry: loadDashboardData
+        });
+        renderErrorState(sessionsContainer, {
+          message: 'Unable to connect to backend server. Make sure the API service is active.',
+          onRetry: loadDashboardData
+        });
+        return;
+      }
+
+      // Try GET /api/dashboard endpoint
+      const dashResult = await apiFetch('/dashboard');
+
+      if (dashResult.success && dashResult.data) {
+        const d = dashResult.data;
+        document.getElementById('metric-skills-offered').textContent = d.skillsOfferedCount ?? d.offeredCount ?? 0;
+        document.getElementById('metric-skills-wanted').textContent = d.skillsWantedCount ?? d.wantedCount ?? 0;
+        document.getElementById('metric-matches').textContent = d.matchesCount ?? d.matchCount ?? 0;
+        document.getElementById('metric-sessions').textContent = d.sessionsCount ?? d.activeSessionsCount ?? 0;
+
+        renderSessionsList(d.recentSessions || d.sessions || []);
+      } else {
+        // Fallback: Fetch individual endpoints (/skills, /matches, /sessions)
+        const [skillsRes, matchesRes, sessionsRes] = await Promise.all([
+          apiFetch('/skills'),
+          apiFetch('/matches'),
+          apiFetch('/sessions')
+        ]);
+
+        if (skillsRes.success && Array.isArray(skillsRes.data)) {
+          const offered = skillsRes.data.filter(s => s.type === 'offered' || s.type === 'teach').length;
+          const wanted = skillsRes.data.filter(s => s.type === 'wanted' || s.type === 'learn').length;
+          document.getElementById('metric-skills-offered').textContent = offered;
+          document.getElementById('metric-skills-wanted').textContent = wanted;
+        } else {
+          document.getElementById('metric-skills-offered').textContent = '0';
+          document.getElementById('metric-skills-wanted').textContent = '0';
+        }
+
+        if (matchesRes.success && Array.isArray(matchesRes.data)) {
+          document.getElementById('metric-matches').textContent = matchesRes.data.length;
+        } else {
+          document.getElementById('metric-matches').textContent = '0';
+        }
+
+        if (sessionsRes.success && Array.isArray(sessionsRes.data)) {
+          document.getElementById('metric-sessions').textContent = sessionsRes.data.length;
+          renderSessionsList(sessionsRes.data.slice(0, 5));
+        } else {
+          document.getElementById('metric-sessions').textContent = '0';
+          renderSessionsList([]);
+        }
+      }
+    }
+
+    function renderSessionsList(sessions) {
+      const container = document.getElementById('recent-sessions-container');
+      if (!sessions || sessions.length === 0) {
+        renderEmptyState(container, {
+          title: 'No Session Requests Yet',
+          message: 'You currently have no active or pending peer session requests.',
+          actionText: 'Find Matches to Request a Session',
+          actionLink: 'matches.html'
+        });
+        return;
+      }
+
+      let html = `
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Skill / Topic</th>
+                <th>Peer Partner</th>
+                <th>Role</th>
+                <th>Scheduled Date</th>
+                <th>Status</th>
+                <th style="text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      sessions.forEach(item => {
+        const status = (item.status || 'pending').toLowerCase();
+        const role = item.role || (item.isTeacher ? 'Teaching' : 'Learning');
+        const partnerName = item.partnerName || item.studentName || item.user?.name || 'Peer Student';
+        const skillName = item.skillName || item.skill?.name || 'General Mentoring';
+        const dateStr = item.date || item.scheduledDate || item.proposedDate || 'TBD';
+
+        html += `
+          <tr>
+            <td style="font-weight: 600;">${escapeHtml(skillName)}</td>
+            <td>${escapeHtml(partnerName)}</td>
+            <td><span class="badge ${role.toLowerCase().includes('teach') ? 'badge-accent' : 'badge-info'}">${escapeHtml(role)}</span></td>
+            <td>${escapeHtml(formatDate(dateStr))}</td>
+            <td><span class="status-pill ${status}"><span class="status-dot"></span>${escapeHtml(status.toUpperCase())}</span></td>
+            <td style="text-align: right;">
+              <a href="sessions.html" class="btn btn-outline btn-sm">Details</a>
+            </td>
+          </tr>
+        `;
+      });
+
+      html += `
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    // Expose for API URL switcher
+    window.refreshCurrentPageData = loadDashboardData;
+
+    // Initial load
+    loadDashboardData();
+  </script>
+</body>
+</html>

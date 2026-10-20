@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sign in to your CampusSkillConnect account to manage your learning exchanges and peer sessions.">
+  <title>Login — CampusSkillConnect</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="auth-page">
+
+  <!-- Top Simple Header -->
+  <header class="auth-header">
+    <div class="container" style="display: flex; align-items: center; justify-content: space-between;">
+      <a href="index.html" class="brand-logo" id="login-brand-logo">
+        <span class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+        </span>
+        <span>CampusSkillConnect</span>
+      </a>
+
+      <a href="index.html" class="text-sm font-semibold text-secondary">&larr; Back to Home</a>
+    </div>
+  </header>
+
+  <!-- Login Form Container -->
+  <main class="auth-container">
+    <div class="auth-card">
+      <h1 class="auth-card-title">Welcome Back</h1>
+      <p class="auth-card-subtitle">Sign in with your student credentials to access your peer network.</p>
+
+      <!-- Alert Message Box (dynamic) -->
+      <div id="auth-alert" class="alert alert-error" style="display: none;">
+        <span class="alert-icon">⚠</span>
+        <div id="auth-alert-message" style="flex: 1;"></div>
+      </div>
+
+      <form id="login-form" novalidate>
+        <div class="form-group" id="group-email">
+          <label class="form-label" for="login-email">College Email <span class="required">*</span></label>
+          <input 
+            type="email" 
+            id="login-email" 
+            name="email" 
+            class="form-control" 
+            placeholder="student@college.edu" 
+            required 
+            autocomplete="email"
+          >
+          <div class="form-error" id="error-email">Please enter a valid email address.</div>
+        </div>
+
+        <div class="form-group" id="group-password">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px;">
+            <label class="form-label" for="login-password" style="margin-bottom: 0;">Password <span class="required">*</span></label>
+            <button type="button" id="toggle-password" style="font-size: 0.8rem; color: var(--accent); font-weight: 600;">Show</button>
+          </div>
+          <input 
+            type="password" 
+            id="login-password" 
+            name="password" 
+            class="form-control" 
+            placeholder="Enter your password" 
+            required 
+            autocomplete="current-password"
+          >
+          <div class="form-error" id="error-password">Password is required.</div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="btn-login-submit" style="width: 100%; margin-top: 10px;">
+          <span id="btn-text">Sign In</span>
+          <span id="btn-spinner" class="spinner spinner-sm" style="display: none; border-color: rgba(255,255,255,0.4); border-top-color: #fff;"></span>
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Don't have an account? <a href="register.html" class="font-semibold" id="link-to-register">Create Account</a>
+      </div>
+
+      <!-- Viva / Development Backend Connection Switcher -->
+      <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-light); text-align: center;">
+        <button type="button" class="text-xs text-muted" onclick="openApiConfigModal()" style="text-decoration: underline;">
+          ⚙ Backend API settings: <span id="current-api-label"></span>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/app.js"></script>
+  <script>
+    // 1. Redirect if already authenticated
+    if (isAuthenticated()) {
+      window.location.href = 'dashboard.html';
+    }
+
+    // 2. Display current API base URL
+    const apiLabel = document.getElementById('current-api-label');
+    if (apiLabel) apiLabel.textContent = getApiBase();
+
+    // 3. Password visibility toggle
+    const togglePasswordBtn = document.getElementById('toggle-password');
+    const passwordInput = document.getElementById('login-password');
+    if (togglePasswordBtn && passwordInput) {
+      togglePasswordBtn.addEventListener('click', () => {
+        const isPassword = passwordInput.type === 'password';
+        passwordInput.type = isPassword ? 'text' : 'password';
+        togglePasswordBtn.textContent = isPassword ? 'Hide' : 'Show';
+      });
+    }
+
+    // 4. Form submission handler
+    const form = document.getElementById('login-form');
+    const alertBox = document.getElementById('auth-alert');
+    const alertMsg = document.getElementById('auth-alert-message');
+    const submitBtn = document.getElementById('btn-login-submit');
+    const btnText = document.getElementById('btn-text');
+    const btnSpinner = document.getElementById('btn-spinner');
+
+    function showAlert(msg, isSuccess = false) {
+      alertBox.className = isSuccess ? 'alert alert-success' : 'alert alert-error';
+      alertBox.querySelector('.alert-icon').textContent = isSuccess ? '✓' : '⚠';
+      alertMsg.textContent = msg;
+      alertBox.style.display = 'flex';
+    }
+
+    function hideAlert() {
+      alertBox.style.display = 'none';
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+
+      let valid = true;
+      if (!email) {
+        document.getElementById('group-email').classList.add('has-error');
+        valid = false;
+      } else {
+        document.getElementById('group-email').classList.remove('has-error');
+      }
+
+      if (!password) {
+        document.getElementById('group-password').classList.add('has-error');
+        valid = false;
+      } else {
+        document.getElementById('group-password').classList.remove('has-error');
+      }
+
+      if (!valid) return;
+
+      // Set loading state on button
+      submitBtn.disabled = true;
+      btnText.style.display = 'none';
+      btnSpinner.style.display = 'inline-block';
+
+      try {
+        const result = await apiFetch('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email, password })
+        });
+
+        if (result.success && result.data) {
+          // Backend confirmed login success
+          const token = result.data.token || result.data.accessToken || result.data.jwt;
+          const user = result.data.user || result.data.student || { email };
+
+          if (token) setAuthToken(token);
+          if (user) setAuthUser(user);
+
+          showAlert('Login successful! Redirecting...', true);
+          showToast('Welcome back!', 'success');
+
+          // Check for redirect query parameter
+          const urlParams = new URLSearchParams(window.location.search);
+          const redirect = urlParams.get('redirect') || 'dashboard.html';
+
+          setTimeout(() => {
+            window.location.href = redirect;
+          }, 800);
+        } else {
+          // Backend returned an error response or server unreachable
+          const errMsg = result.error || 'Invalid email or password. Please verify your credentials.';
+          showAlert(errMsg, false);
+        }
+      } catch (err) {
+        showAlert('An unexpected client error occurred. Please try again.', false);
+      } finally {
+        submitBtn.disabled = false;
+        btnText.style.display = 'inline';
+        btnSpinner.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

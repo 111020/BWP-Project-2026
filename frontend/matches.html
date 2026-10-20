@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Discover compatible student learning partners on CampusSkillConnect.">
+  <title>Find Matches — CampusSkillConnect</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="app-layout">
+
+  <!-- ========================================================================
+       Sidebar Navigation
+       ======================================================================== -->
+  <aside class="app-sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="brand-logo">
+        <span class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+        </span>
+        <span>SkillConnect</span>
+      </a>
+    </div>
+
+    <!-- Authenticated Student Mini Card -->
+    <div class="sidebar-user">
+      <div class="sidebar-avatar" data-user-avatar>?</div>
+      <div style="min-width: 0;">
+        <div class="sidebar-user-name" data-user-name>Loading...</div>
+        <div class="sidebar-user-role" data-user-dept>Student</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <ul style="display: flex; flex-direction: column; gap: 4px;">
+        <li class="nav-item">
+          <a href="dashboard.html" class="nav-menu-link" data-page="dashboard">
+            <span class="nav-menu-icon">📊</span>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="skills.html" class="nav-menu-link" data-page="skills">
+            <span class="nav-menu-icon">💡</span>
+            <span>Manage Skills</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="matches.html" class="nav-menu-link" data-page="matches">
+            <span class="nav-menu-icon">🤝</span>
+            <span>Find Matches</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="sessions.html" class="nav-menu-link" data-page="sessions">
+            <span class="nav-menu-icon">📅</span>
+            <span>Session Requests</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="profile.html" class="nav-menu-link" data-page="profile">
+            <span class="nav-menu-icon">👤</span>
+            <span>Student Profile</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="nav-menu-link" style="width: 100%; border: none; text-align: left;" data-action="logout">
+        <span class="nav-menu-icon">🚪</span>
+        <span>Sign Out</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ========================================================================
+       Main Content Area
+       ======================================================================== -->
+  <div class="app-main">
+    <header class="app-topbar">
+      <div class="topbar-left">
+        <button class="mobile-toggle" id="mobile-sidebar-toggle" aria-label="Toggle Sidebar Menu">☰</button>
+        <div>
+          <h1 class="topbar-title">Find Compatible Students</h1>
+          <div class="topbar-subtitle">Peer students whose skills complement yours</div>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <button class="backend-indicator" id="backend-indicator" title="Backend Server Status">
+          <span class="backend-dot" id="backend-dot"></span>
+          <span id="backend-text">Connecting...</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="app-content">
+
+      <!-- Alert Box -->
+      <div id="matches-alert-area"></div>
+
+      <!-- Filter / Search Bar -->
+      <div class="card" style="margin-bottom: 24px; padding: 18px 24px;">
+        <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 220px;">
+            <input 
+              type="text" 
+              id="search-match-input" 
+              class="form-control" 
+              placeholder="Filter matches by skill name or department..."
+            >
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-primary btn-sm" id="btn-refresh-matches">
+              ↻ Refresh Matches
+            </button>
+            <a href="skills.html" class="btn btn-outline btn-sm">
+              Manage Your Skills
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Matches Container (No fake hardcoded profiles!) -->
+      <div id="matches-grid-container">
+        <div class="loading-box">
+          <div class="spinner"></div>
+          <p class="text-sm text-secondary">Fetching compatible peers from backend API...</p>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ========================================================================
+       Request Session Modal
+       ======================================================================== -->
+  <div class="modal-overlay" id="modal-request-session">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">Request Learning Session</h3>
+        <button class="modal-close" data-modal-close>&times;</button>
+      </div>
+
+      <form id="form-request-session">
+        <div class="modal-body">
+          <input type="hidden" id="req-partner-id">
+          <input type="hidden" id="req-skill-id">
+
+          <!-- Target Student Summary -->
+          <div style="background-color: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 18px; display: flex; align-items: center; gap: 12px;">
+            <div class="sidebar-avatar" id="modal-partner-avatar" style="width: 38px; height: 38px; font-size: 0.95rem;">P</div>
+            <div>
+              <div class="font-semibold" id="modal-partner-name" style="font-size: 0.95rem;">Student Name</div>
+              <div class="text-xs text-secondary" id="modal-partner-dept">Department &bull; Academic Year</div>
+            </div>
+          </div>
+
+          <!-- Skill to Focus On -->
+          <div class="form-group">
+            <label class="form-label" for="req-skill-name">Learning Skill / Focus <span class="required">*</span></label>
+            <input type="text" id="req-skill-name" class="form-control" readonly style="background-color: var(--bg-subtle);">
+          </div>
+
+          <!-- Proposed Date & Time -->
+          <div class="grid grid-2" style="gap: 16px;">
+            <div class="form-group">
+              <label class="form-label" for="req-date">Proposed Date <span class="required">*</span></label>
+              <input type="date" id="req-date" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="req-time">Proposed Time <span class="required">*</span></label>
+              <input type="time" id="req-time" class="form-control" required>
+            </div>
+          </div>
+
+          <!-- Meeting Mode -->
+          <div class="form-group">
+            <label class="form-label" for="req-mode">Meeting Preference <span class="required">*</span></label>
+            <select id="req-mode" class="form-select" required>
+              <option value="In-person Campus Library">In-person (Campus Library)</option>
+              <option value="In-person Department Lab">In-person (Department Lab / Common Room)</option>
+              <option value="Online Video Call">Online Video Call (Google Meet / Zoom)</option>
+            </select>
+          </div>
+
+          <!-- Agenda / Notes -->
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="req-message">Session Goal or Note</label>
+            <textarea 
+              id="req-message" 
+              class="form-textarea" 
+              rows="3" 
+              placeholder="e.g. Would love 45 mins to go over lab assignment questions and exchange feedback."
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline btn-sm" data-modal-close>Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm" id="btn-submit-session-req">
+            <span id="req-submit-text">Send Session Request</span>
+            <span id="req-submit-spinner" class="spinner spinner-sm" style="display: none; border-color: rgba(255,255,255,0.4); border-top-color: #fff;"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    requireAuth();
+    initAppLayout('matches');
+
+    let rawMatches = [];
+
+    // Set minimum date to today
+    const dateInput = document.getElementById('req-date');
+    if (dateInput) {
+      const today = new Date().toISOString().split('T')[0];
+      dateInput.min = today;
+      dateInput.value = today;
+    }
+
+    async function loadMatches() {
+      const container = document.getElementById('matches-grid-container');
+      const alertContainer = document.getElementById('matches-alert-area');
+
+      renderLoadingState(container, 'Searching for compatible student matches from backend...');
+      alertContainer.innerHTML = '';
+
+      const result = await apiFetch('/matches');
+
+      if (!result.success) {
+        renderErrorState(container, {
+          message: result.error || 'Failed to retrieve matches from backend at ' + getApiBase(),
+          onRetry: loadMatches
+        });
+        return;
+      }
+
+      // Backend returned real matches
+      rawMatches = Array.isArray(result.data) ? result.data : (result.data.matches || []);
+      renderMatchesGrid(rawMatches);
+    }
+
+    function renderMatchesGrid(matches) {
+      const container = document.getElementById('matches-grid-container');
+
+      if (!matches || matches.length === 0) {
+        renderEmptyState(container, {
+          title: 'No Compatible Matches Found',
+          message: 'Currently no peer matches exist for your profile. Make sure you have added both skills you can teach and skills you want to learn so other students can discover you.',
+          actionText: 'Manage Your Skills',
+          actionLink: 'skills.html'
+        });
+        return;
+      }
+
+      let html = '<div class="grid grid-2" style="gap: 20px;">';
+
+      matches.forEach((match, index) => {
+        const student = match.student || match.user || match;
+        const studentId = student._id || student.id || `student-${index}`;
+        const name = student.name || 'Anonymous Student';
+        const dept = student.department || 'General';
+        const year = student.year || 'Student';
+        const initial = name.charAt(0).toUpperCase();
+
+        // Skill info
+        const teachesSkill = match.teachesSkill || match.matchingSkill || match.offeredSkill || 'General Peer Tutoring';
+        const wantsSkill = match.wantsSkill || match.desiredSkill || 'Reciprocal Learning';
+        const skillId = match.skillId || (match.skill ? match.skill._id : '');
+
+        html += `
+          <div class="card card-hover" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div class="sidebar-avatar" style="width: 44px; height: 44px;">${escapeHtml(initial)}</div>
+                  <div>
+                    <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">
+                      ${escapeHtml(name)}
+                    </h3>
+                    <div class="text-xs text-secondary">${escapeHtml(dept)} &bull; ${escapeHtml(year)}</div>
+                  </div>
+                </div>
+                <span class="badge badge-accent">Compatible Match</span>
+              </div>
+
+              <!-- Matching Breakdown -->
+              <div style="background-color: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 16px;">
+                <div style="margin-bottom: 10px;">
+                  <span class="text-xs text-muted" style="text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">They Can Teach You</span>
+                  <div style="font-weight: 600; color: #065F46; font-size: 0.92rem; margin-top: 2px; display: flex; align-items: center; gap: 6px;">
+                    <span>✓</span> ${escapeHtml(teachesSkill)}
+                  </div>
+                </div>
+
+                <div>
+                  <span class="text-xs text-muted" style="text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">They Want to Learn</span>
+                  <div style="font-weight: 600; color: #1E40AF; font-size: 0.92rem; margin-top: 2px; display: flex; align-items: center; gap: 6px;">
+                    <span>★</span> ${escapeHtml(wantsSkill)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Button -->
+            <button 
+              class="btn btn-primary btn-sm btn-open-request-modal" 
+              style="width: 100%;"
+              data-partner-id="${escapeHtml(studentId)}"
+              data-partner-name="${escapeHtml(name)}"
+              data-partner-dept="${escapeHtml(dept)} • ${escapeHtml(year)}"
+              data-skill-id="${escapeHtml(skillId)}"
+              data-skill-name="${escapeHtml(teachesSkill)}"
+            >
+              Request Learning Session &rarr;
+            </button>
+          </div>
+        `;
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+
+      // Attach click listeners to Request Session buttons
+      container.querySelectorAll('.btn-open-request-modal').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const b = e.currentTarget;
+          document.getElementById('req-partner-id').value = b.getAttribute('data-partner-id');
+          document.getElementById('req-partner-name').textContent = b.getAttribute('data-partner-name');
+          document.getElementById('modal-partner-avatar').textContent = (b.getAttribute('data-partner-name') || 'P').charAt(0).toUpperCase();
+          document.getElementById('modal-partner-dept').textContent = b.getAttribute('data-partner-dept');
+          document.getElementById('req-skill-id').value = b.getAttribute('data-skill-id') || '';
+          document.getElementById('req-skill-name').value = b.getAttribute('data-skill-name');
+          openModal('modal-request-session');
+        });
+      });
+    }
+
+    // Filter matches input handler
+    const searchInput = document.getElementById('search-match-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        if (!query) {
+          renderMatchesGrid(rawMatches);
+          return;
+        }
+
+        const filtered = rawMatches.filter(m => {
+          const student = m.student || m.user || m;
+          const name = (student.name || '').toLowerCase();
+          const dept = (student.department || '').toLowerCase();
+          const teaches = (m.teachesSkill || m.matchingSkill || '').toLowerCase();
+          const wants = (m.wantsSkill || '').toLowerCase();
+
+          return name.includes(query) || dept.includes(query) || teaches.includes(query) || wants.includes(query);
+        });
+
+        renderMatchesGrid(filtered);
+      });
+    }
+
+    // Refresh button
+    const refreshBtn = document.getElementById('btn-refresh-matches');
+    if (refreshBtn) refreshBtn.addEventListener('click', loadMatches);
+
+    // Session Request Form Submission
+    const reqForm = document.getElementById('form-request-session');
+    const reqSubmitBtn = document.getElementById('btn-submit-session-req');
+    const reqSubmitText = document.getElementById('req-submit-text');
+    const reqSubmitSpinner = document.getElementById('req-submit-spinner');
+
+    reqForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const partnerId = document.getElementById('req-partner-id').value;
+      const skillId = document.getElementById('req-skill-id').value;
+      const skillName = document.getElementById('req-skill-name').value;
+      const proposedDate = document.getElementById('req-date').value;
+      const proposedTime = document.getElementById('req-time').value;
+      const mode = document.getElementById('req-mode').value;
+      const message = document.getElementById('req-message').value.trim();
+
+      if (!proposedDate || !proposedTime) {
+        showToast('Please select a date and time.', 'warning');
+        return;
+      }
+
+      reqSubmitBtn.disabled = true;
+      reqSubmitText.style.display = 'none';
+      reqSubmitSpinner.style.display = 'inline-block';
+
+      const payload = {
+        partnerId,
+        skillId,
+        skillName,
+        proposedDate,
+        proposedTime,
+        mode,
+        message
+      };
+
+      const result = await apiFetch('/sessions', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      reqSubmitBtn.disabled = false;
+      reqSubmitText.style.display = 'inline';
+      reqSubmitSpinner.style.display = 'none';
+
+      if (result.success) {
+        closeModal('modal-request-session');
+        showToast('Session request sent to peer!', 'success');
+        setTimeout(() => {
+          window.location.href = 'sessions.html';
+        }, 1000);
+      } else {
+        showToast(result.error || 'Failed to submit session request to backend.', 'error');
+      }
+    });
+
+    window.refreshCurrentPageData = loadMatches;
+    loadMatches();
+  </script>
+</body>
+</html>

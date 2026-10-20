@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="CampusSkillConnect — A peer-to-peer student learning exchange platform where college students can teach skills they know and learn skills from peers.">
+  <title>CampusSkillConnect — Peer-to-Peer Student Learning Exchange</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ========================================================================
+       Top Navigation Bar
+       ======================================================================== -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="index.html" class="brand-logo" id="landing-logo">
+        <span class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            <path d="M12 6v6"></path>
+            <path d="M9 9h6"></path>
+          </svg>
+        </span>
+        <span>CampusSkillConnect</span>
+      </a>
+
+      <nav class="nav-links" id="main-nav-links">
+        <a href="#how-it-works" class="nav-link">How It Works</a>
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#about" class="nav-link">About Platform</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="login.html" class="btn btn-outline btn-sm" id="nav-btn-login">Login</a>
+        <a href="register.html" class="btn btn-primary btn-sm" id="nav-btn-register">Get Started</a>
+        <button class="mobile-menu-btn" id="mobile-landing-toggle" aria-label="Toggle Navigation Menu">☰</button>
+      </div>
+    </div>
+
+    <!-- Mobile Nav Drawer (Hidden on Desktop) -->
+    <div class="mobile-nav-drawer" id="mobile-landing-drawer" style="display: none;">
+      <a href="#how-it-works" class="nav-link">How It Works</a>
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#about" class="nav-link">About Platform</a>
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <a href="login.html" class="btn btn-outline btn-sm" style="flex: 1;">Login</a>
+        <a href="register.html" class="btn btn-primary btn-sm" style="flex: 1;">Get Started</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       Hero Section
+       ======================================================================== -->
+  <main>
+    <section class="hero-section">
+      <div class="container">
+        <div class="hero-content">
+          <div class="hero-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            Peer-to-Peer Student Knowledge Exchange
+          </div>
+
+          <h1 class="hero-title">
+            Learn Together. <br>
+            <span class="highlight">Grow Together.</span>
+          </h1>
+
+          <p class="hero-subtitle">
+            Exchange skills directly with fellow students across your campus. Teach what you excel at, learn what you are curious about, and collaborate one-on-one — zero cost, 100% peer-powered.
+          </p>
+
+          <div class="hero-cta">
+            <a href="register.html" class="btn btn-primary btn-lg" id="hero-cta-find">
+              Find Your Learning Partner
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </a>
+            <a href="register.html" class="btn btn-secondary btn-lg" id="hero-cta-share">
+              Share Your Skills
+            </a>
+          </div>
+        </div>
+
+        <!-- Tasteful CSS/SVG Visual Illustrating Peer Skill Exchange -->
+        <div class="exchange-visual-container">
+          <div class="exchange-visual-card">
+            <div class="exchange-grid">
+              
+              <!-- Student Card 1 -->
+              <div class="peer-card">
+                <div class="peer-header">
+                  <div class="peer-avatar">A</div>
+                  <div>
+                    <div class="peer-name">Student A</div>
+                    <div class="peer-dept">Computer Science &bull; 3rd Year</div>
+                  </div>
+                </div>
+                <div class="peer-skill-group">
+                  <div class="peer-skill-label">Can Teach</div>
+                  <div class="peer-tags">
+                    <span class="peer-tag tag-teaching">Python Programming</span>
+                    <span class="peer-tag tag-teaching">Data Structures</span>
+                  </div>
+                </div>
+                <div class="peer-skill-group" style="margin-bottom: 0;">
+                  <div class="peer-skill-label">Wants to Learn</div>
+                  <div class="peer-tags">
+                    <span class="peer-tag tag-learning">UI/UX Design</span>
+                    <span class="peer-tag tag-learning">Figma Basics</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Mutual Exchange Connector -->
+              <div class="exchange-connector">
+                <div class="exchange-badge-bubble">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="17 1 21 5 17 9"></polyline>
+                    <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                    <polyline points="7 23 3 19 7 15"></polyline>
+                    <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                  </svg>
+                </div>
+                <span class="exchange-label-text">1-on-1 Exchange</span>
+              </div>
+
+              <!-- Student Card 2 -->
+              <div class="peer-card">
+                <div class="peer-header">
+                  <div class="peer-avatar" style="background-color: #E0E7FF; color: #4338CA;">P</div>
+                  <div>
+                    <div class="peer-name">Student B</div>
+                    <div class="peer-dept">Design & Multimedia &bull; 2nd Year</div>
+                  </div>
+                </div>
+                <div class="peer-skill-group">
+                  <div class="peer-skill-label">Can Teach</div>
+                  <div class="peer-tags">
+                    <span class="peer-tag tag-teaching">UI/UX Design</span>
+                    <span class="peer-tag tag-teaching">Figma Wireframing</span>
+                  </div>
+                </div>
+                <div class="peer-skill-group" style="margin-bottom: 0;">
+                  <div class="peer-skill-label">Wants to Learn</div>
+                  <div class="peer-tags">
+                    <span class="peer-tag tag-learning">Python for Automation</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         Features Section (3 concise cards)
+         ======================================================================== -->
+    <section class="section section-alt" id="features">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Core Features</span>
+          <h2 class="section-title">Designed for Campus Collaboration</h2>
+          <p class="section-desc">
+            CampusSkillConnect makes learning from your peers structured, reciprocal, and straightforward.
+          </p>
+        </div>
+
+        <div class="grid grid-3">
+          <!-- Feature Card 1 -->
+          <div class="feature-card">
+            <div class="feature-icon-wrapper">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+            </div>
+            <h3 class="feature-title">Share Skills</h3>
+            <p class="feature-text">
+              List the academic, technical, or creative skills you have mastered. Help fellow students overcome obstacles while reinforcing your own mastery.
+            </p>
+          </div>
+
+          <!-- Feature Card 2 -->
+          <div class="feature-card">
+            <div class="feature-icon-wrapper">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                <line x1="11" y1="8" x2="11" y2="14"></line>
+                <line x1="8" y1="11" x2="14" y2="11"></line>
+              </svg>
+            </div>
+            <h3 class="feature-title">Find Your Match</h3>
+            <p class="feature-text">
+              Discover student partners whose skill offerings match what you need to learn, creating balanced reciprocal learning opportunities across departments.
+            </p>
+          </div>
+
+          <!-- Feature Card 3 -->
+          <div class="feature-card">
+            <div class="feature-icon-wrapper">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </div>
+            <h3 class="feature-title">Learn Together</h3>
+            <p class="feature-text">
+              Propose session dates and times, coordinate meeting locations on campus or online, and manage all session requests in one clean dashboard.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         How It Works Section (3 straightforward steps)
+         ======================================================================== -->
+    <section class="section" id="how-it-works">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Simple Process</span>
+          <h2 class="section-title">How CampusSkillConnect Works</h2>
+          <p class="section-desc">
+            Getting started takes only three simple steps.
+          </p>
+        </div>
+
+        <div class="steps-grid">
+          <!-- Step 1 -->
+          <div class="step-card">
+            <div class="step-number">1</div>
+            <h3 class="step-title">Create Profile & List Skills</h3>
+            <p class="step-desc">
+              Sign up with your college email. Add the skills you are confident teaching, along with topics you want to learn this semester.
+            </p>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="step-card">
+            <div class="step-number">2</div>
+            <h3 class="step-title">Connect With Peer Matches</h3>
+            <p class="step-desc">
+              Browse compatible students whose needs align with your strengths. Review their academic year, department, and skill details.
+            </p>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="step-card">
+            <div class="step-number">3</div>
+            <h3 class="step-title">Schedule & Exchange</h3>
+            <p class="step-desc">
+              Send a session request with your preferred time and topic. Once accepted, meet up to learn, build projects, and grow together.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         About Section
+         ======================================================================== -->
+    <section class="section section-alt" id="about">
+      <div class="container">
+        <div style="max-width: 760px; margin: 0 auto; text-align: center;">
+          <span class="section-tag">Student-Centered Learning</span>
+          <h2 class="section-title">Bridging Campus Knowledge Gaps</h2>
+          <p class="section-desc" style="margin-bottom: 24px;">
+            Every student has unique knowledge to contribute. CampusSkillConnect transforms every campus into a vibrant, self-sustaining community where knowledge flows freely between semesters and disciplines.
+          </p>
+          <a href="register.html" class="btn btn-primary" id="about-btn-join">Join Your Campus Network</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================================================
+       Minimal Footer
+       ======================================================================== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-top">
+        <a href="index.html" class="brand-logo">
+          <span class="brand-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+          </span>
+          <span>CampusSkillConnect</span>
+        </a>
+
+        <div class="footer-links">
+          <a href="#how-it-works" class="footer-link">How It Works</a>
+          <a href="#features" class="footer-link">Features</a>
+          <a href="login.html" class="footer-link">Student Login</a>
+          <a href="register.html" class="footer-link">Create Account</a>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>&copy; CampusSkillConnect — Peer-to-Peer Learning Exchange.</div>
+        <div>Built with HTML5, CSS3, &amp; Vanilla JavaScript.</div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script>
+    // Simple mobile menu toggle for landing page
+    const toggleBtn = document.getElementById('mobile-landing-toggle');
+    const drawer = document.getElementById('mobile-landing-drawer');
+    if (toggleBtn && drawer) {
+      toggleBtn.addEventListener('click', () => {
+        const isHidden = drawer.style.display === 'none' || window.getComputedStyle(drawer).display === 'none';
+        drawer.style.display = isHidden ? 'flex' : 'none';
+      });
+    }
+  </script>
+</body>
+</html>

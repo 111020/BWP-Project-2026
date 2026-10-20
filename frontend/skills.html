@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Manage your offered and wanted skills on CampusSkillConnect.">
+  <title>Manage Skills — CampusSkillConnect</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="app-layout">
+
+  <!-- ========================================================================
+       Sidebar Navigation
+       ======================================================================== -->
+  <aside class="app-sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="brand-logo">
+        <span class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+        </span>
+        <span>SkillConnect</span>
+      </a>
+    </div>
+
+    <!-- Authenticated Student Mini Card -->
+    <div class="sidebar-user">
+      <div class="sidebar-avatar" data-user-avatar>?</div>
+      <div style="min-width: 0;">
+        <div class="sidebar-user-name" data-user-name>Loading...</div>
+        <div class="sidebar-user-role" data-user-dept>Student</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <ul style="display: flex; flex-direction: column; gap: 4px;">
+        <li class="nav-item">
+          <a href="dashboard.html" class="nav-menu-link" data-page="dashboard">
+            <span class="nav-menu-icon">📊</span>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="skills.html" class="nav-menu-link" data-page="skills">
+            <span class="nav-menu-icon">💡</span>
+            <span>Manage Skills</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="matches.html" class="nav-menu-link" data-page="matches">
+            <span class="nav-menu-icon">🤝</span>
+            <span>Find Matches</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="sessions.html" class="nav-menu-link" data-page="sessions">
+            <span class="nav-menu-icon">📅</span>
+            <span>Session Requests</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="profile.html" class="nav-menu-link" data-page="profile">
+            <span class="nav-menu-icon">👤</span>
+            <span>Student Profile</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="nav-menu-link" style="width: 100%; border: none; text-align: left;" data-action="logout">
+        <span class="nav-menu-icon">🚪</span>
+        <span>Sign Out</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ========================================================================
+       Main Content Area
+       ======================================================================== -->
+  <div class="app-main">
+    <header class="app-topbar">
+      <div class="topbar-left">
+        <button class="mobile-toggle" id="mobile-sidebar-toggle" aria-label="Toggle Sidebar Menu">☰</button>
+        <div>
+          <h1 class="topbar-title">Manage Skills</h1>
+          <div class="topbar-subtitle">List skills you can teach and skills you want to learn</div>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <button class="btn btn-primary btn-sm" id="btn-open-add-skill-modal">
+          ＋ Add New Skill
+        </button>
+        <button class="backend-indicator" id="backend-indicator" title="Backend Server Status">
+          <span class="backend-dot" id="backend-dot"></span>
+          <span id="backend-text">Connecting...</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="app-content">
+
+      <!-- Alert Box -->
+      <div id="skills-alert-area"></div>
+
+      <!-- Add Skill Inline Card / Quick Form -->
+      <div class="card" style="margin-bottom: 28px;">
+        <div class="card-header">
+          <h2 class="card-title">Add a Skill</h2>
+          <span class="text-xs text-muted">All fields marked with * are required</span>
+        </div>
+
+        <form id="add-skill-form">
+          <div class="grid grid-2">
+            <!-- Skill Name -->
+            <div class="form-group">
+              <label class="form-label" for="skill-name">Skill Name <span class="required">*</span></label>
+              <input 
+                type="text" 
+                id="skill-name" 
+                class="form-control" 
+                placeholder="e.g. Python, Figma, React, Linear Algebra" 
+                required
+              >
+            </div>
+
+            <!-- Skill Type (Offered vs Wanted) -->
+            <div class="form-group">
+              <label class="form-label">Skill Type <span class="required">*</span></label>
+              <div class="radio-group" style="padding-top: 8px;">
+                <label class="radio-item">
+                  <input type="radio" name="skill-type" value="offered" checked>
+                  <span class="font-semibold">I Can Teach This (Offered)</span>
+                </label>
+                <label class="radio-item">
+                  <input type="radio" name="skill-type" value="wanted">
+                  <span class="font-semibold">I Want to Learn (Wanted)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-2">
+            <!-- Category -->
+            <div class="form-group">
+              <label class="form-label" for="skill-category">Category <span class="required">*</span></label>
+              <select id="skill-category" class="form-select" required>
+                <option value="Programming">Programming &amp; Software</option>
+                <option value="Web Development">Web Development</option>
+                <option value="Data Science & AI">Data Science &amp; AI</option>
+                <option value="UI/UX Design">UI/UX &amp; Graphic Design</option>
+                <option value="Mobile Development">Mobile App Development</option>
+                <option value="Core Engineering">Core Engineering &amp; Math</option>
+                <option value="Languages">Languages &amp; Writing</option>
+                <option value="Other">Other Academic Subject</option>
+              </select>
+            </div>
+
+            <!-- Proficiency / Target Level -->
+            <div class="form-group">
+              <label class="form-label" for="skill-level">Proficiency / Target Level <span class="required">*</span></label>
+              <select id="skill-level" class="form-select" required>
+                <option value="Beginner">Beginner (Foundations &amp; Basics)</option>
+                <option value="Intermediate" selected>Intermediate (Working Knowledge)</option>
+                <option value="Advanced">Advanced (Projects &amp; Complex Topics)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Description / Notes -->
+          <div class="form-group">
+            <label class="form-label" for="skill-desc">Brief Description / Specific Topics (Optional)</label>
+            <input 
+              type="text" 
+              id="skill-desc" 
+              class="form-control" 
+              placeholder="e.g. Can mentor on Pandas & Matplotlib, or want help preparing for lab exams"
+            >
+          </div>
+
+          <div style="display: flex; justify-content: flex-end;">
+            <button type="submit" class="btn btn-primary" id="btn-save-skill">
+              <span id="skill-btn-text">Add Skill</span>
+              <span id="skill-btn-spinner" class="spinner spinner-sm" style="display: none; border-color: rgba(255,255,255,0.4); border-top-color: #fff;"></span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Two-Column Skill Display Grid: Offered vs Wanted -->
+      <div class="grid grid-2" style="align-items: start;">
+        
+        <!-- Column 1: Skills I Can Teach -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title" style="display: flex; align-items: center; gap: 8px;">
+                <span>Skills Offered</span>
+                <span class="badge badge-accent" id="count-offered">0</span>
+              </h3>
+              <p class="text-xs text-secondary">Topics you can teach or mentor peers on</p>
+            </div>
+          </div>
+
+          <div class="card-body" id="container-offered-skills">
+            <div class="loading-box">
+              <div class="spinner"></div>
+              <p class="text-sm text-secondary">Loading skills from backend...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 2: Skills I Want to Learn -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title" style="display: flex; align-items: center; gap: 8px;">
+                <span>Skills Wanted</span>
+                <span class="badge badge-info" id="count-wanted">0</span>
+              </h3>
+              <p class="text-xs text-secondary">Topics you want to learn from peers</p>
+            </div>
+          </div>
+
+          <div class="card-body" id="container-wanted-skills">
+            <div class="loading-box">
+              <div class="spinner"></div>
+              <p class="text-sm text-secondary">Loading skills from backend...</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    requireAuth();
+    initAppLayout('skills');
+
+    let allSkills = [];
+
+    async function loadSkills() {
+      const offeredContainer = document.getElementById('container-offered-skills');
+      const wantedContainer = document.getElementById('container-wanted-skills');
+      const alertContainer = document.getElementById('skills-alert-area');
+
+      renderLoadingState(offeredContainer, 'Loading offered skills...');
+      renderLoadingState(wantedContainer, 'Loading wanted skills...');
+      alertContainer.innerHTML = '';
+
+      const result = await apiFetch('/skills');
+
+      if (!result.success) {
+        renderErrorState(offeredContainer, {
+          message: result.error || 'Unable to connect to backend server at ' + getApiBase(),
+          onRetry: loadSkills
+        });
+        renderErrorState(wantedContainer, {
+          message: result.error || 'Unable to connect to backend server at ' + getApiBase(),
+          onRetry: loadSkills
+        });
+        return;
+      }
+
+      // Backend returned real skills data
+      allSkills = Array.isArray(result.data) ? result.data : (result.data.skills || []);
+
+      const offered = allSkills.filter(s => (s.type || '').toLowerCase() === 'offered' || (s.type || '').toLowerCase() === 'teach');
+      const wanted = allSkills.filter(s => (s.type || '').toLowerCase() === 'wanted' || (s.type || '').toLowerCase() === 'learn');
+
+      document.getElementById('count-offered').textContent = offered.length;
+      document.getElementById('count-wanted').textContent = wanted.length;
+
+      renderSkillsSection(offeredContainer, offered, 'offered');
+      renderSkillsSection(wantedContainer, wanted, 'wanted');
+    }
+
+    function renderSkillsSection(container, list, type) {
+      if (!list || list.length === 0) {
+        const isOffered = type === 'offered';
+        renderEmptyState(container, {
+          title: isOffered ? 'No Skills Offered Yet' : 'No Skills Wanted Yet',
+          message: isOffered 
+            ? 'List skills you are comfortable teaching so peers can discover you.'
+            : 'List skills you want to learn this semester to find compatible mentors.',
+          actionText: 'Add a Skill Above'
+        });
+        return;
+      }
+
+      let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
+
+      list.forEach(skill => {
+        const id = skill._id || skill.id;
+        const name = skill.name || 'Unnamed Skill';
+        const category = skill.category || 'General';
+        const level = skill.level || 'Intermediate';
+        const desc = skill.description || '';
+
+        html += `
+          <div style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 14px 16px; background-color: var(--bg-primary); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+            <div style="min-width: 0; flex: 1;">
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;">
+                <span style="font-weight: 700; color: var(--text-primary); font-size: 0.98rem;">${escapeHtml(name)}</span>
+                <span class="badge ${type === 'offered' ? 'badge-accent' : 'badge-info'}">${escapeHtml(level)}</span>
+                <span class="badge badge-neutral">${escapeHtml(category)}</span>
+              </div>
+              ${desc ? `<div class="text-xs text-secondary" style="margin-top: 4px;">${escapeHtml(desc)}</div>` : ''}
+            </div>
+
+            <button 
+              class="btn btn-outline btn-sm btn-delete-skill" 
+              data-id="${escapeHtml(id)}" 
+              title="Remove skill" 
+              style="color: var(--color-danger); border-color: var(--border-color); padding: 6px 10px;"
+            >
+              🗑 Remove
+            </button>
+          </div>
+        `;
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+
+      // Attach delete listeners
+      container.querySelectorAll('.btn-delete-skill').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const skillId = e.currentTarget.getAttribute('data-id');
+          if (confirm('Are you sure you want to remove this skill from your profile?')) {
+            await deleteSkill(skillId);
+          }
+        });
+      });
+    }
+
+    async function deleteSkill(skillId) {
+      if (!skillId) return;
+
+      const result = await apiFetch(`/skills/${skillId}`, {
+        method: 'DELETE'
+      });
+
+      if (result.success) {
+        showToast('Skill removed successfully.', 'success');
+        loadSkills();
+      } else {
+        showToast(result.error || 'Failed to remove skill.', 'error');
+      }
+    }
+
+    // Add Skill Form Submission
+    const addForm = document.getElementById('add-skill-form');
+    const saveBtn = document.getElementById('btn-save-skill');
+    const saveText = document.getElementById('skill-btn-text');
+    const saveSpinner = document.getElementById('skill-btn-spinner');
+
+    addForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('skill-name').value.trim();
+      const type = document.querySelector('input[name="skill-type"]:checked').value;
+      const category = document.getElementById('skill-category').value;
+      const level = document.getElementById('skill-level').value;
+      const description = document.getElementById('skill-desc').value.trim();
+
+      if (!name) {
+        showToast('Please provide a skill name.', 'warning');
+        return;
+      }
+
+      saveBtn.disabled = true;
+      saveText.style.display = 'none';
+      saveSpinner.style.display = 'inline-block';
+
+      const payload = {
+        name,
+        type,
+        category,
+        level,
+        description
+      };
+
+      const result = await apiFetch('/skills', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      saveBtn.disabled = false;
+      saveText.style.display = 'inline';
+      saveSpinner.style.display = 'none';
+
+      if (result.success) {
+        showToast('Skill added successfully!', 'success');
+        document.getElementById('skill-name').value = '';
+        document.getElementById('skill-desc').value = '';
+        loadSkills();
+      } else {
+        showToast(result.error || 'Could not save skill to backend.', 'error');
+      }
+    });
+
+    window.refreshCurrentPageData = loadSkills;
+    loadSkills();
+  </script>
+</body>
+</html>
