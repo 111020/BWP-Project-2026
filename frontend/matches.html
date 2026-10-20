@@ -212,6 +212,8 @@
     </div>
   </div>
 
+  <!-- jQuery 3.7.1 CDN -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="js/app.js"></script>
   <script>
     requireAuth();
@@ -227,26 +229,54 @@
       dateInput.value = today;
     }
 
-    async function loadMatches() {
+    function loadMatches() {
       const container = document.getElementById('matches-grid-container');
       const alertContainer = document.getElementById('matches-alert-area');
 
       renderLoadingState(container, 'Searching for compatible student matches from backend...');
       alertContainer.innerHTML = '';
 
-      const result = await apiFetch('/matches');
-
-      if (!result.success) {
-        renderErrorState(container, {
-          message: result.error || 'Failed to retrieve matches from backend at ' + getApiBase(),
-          onRetry: loadMatches
-        });
-        return;
+      // Prepare headers with existing auth token if available
+      const headers = {};
+      const token = getAuthToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
 
-      // Backend returned real matches
-      rawMatches = Array.isArray(result.data) ? result.data : (result.data.matches || []);
-      renderMatchesGrid(rawMatches);
+      // Load student matches using jQuery AJAX
+      $.ajax({
+        url: 'http://localhost:5000/api/matches',
+        method: 'GET',
+        dataType: 'json',
+        xhrFields: {
+          withCredentials: true
+        },
+        headers: headers,
+        success: function(response) {
+          // Backend returns { success: true, matches: [...] }
+          rawMatches = Array.isArray(response)
+            ? response
+            : (response && response.matches ? response.matches : []);
+          renderMatchesGrid(rawMatches);
+        },
+        error: function(xhr, status, errorThrown) {
+          let errorMessage = 'Failed to retrieve matches from backend.';
+          if (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.error)) {
+            errorMessage = xhr.responseJSON.message || xhr.responseJSON.error;
+          } else if (xhr.status === 401) {
+            errorMessage = 'Your session has expired. Please sign in again.';
+          } else if (xhr.status === 0) {
+            errorMessage = 'Could not connect to backend server at http://localhost:5000/api. Ensure backend is running.';
+          } else if (errorThrown) {
+            errorMessage = `Request failed: ${errorThrown}`;
+          }
+
+          renderErrorState(container, {
+            message: errorMessage,
+            onRetry: loadMatches
+          });
+        }
+      });
     }
 
     function renderMatchesGrid(matches) {

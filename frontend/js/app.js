@@ -165,6 +165,7 @@ async function apiFetch(endpoint, options = {}) {
   }
 
   const fetchOptions = {
+    credentials: options.credentials || 'include',
     ...options,
     headers
   };
