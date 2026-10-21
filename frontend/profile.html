@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="description" content="View and edit your CampusSkillConnect student profile.">
   <title>Student Profile — CampusSkillConnect</title>
   <link rel="stylesheet" href="css/style.css">
@@ -230,10 +233,16 @@
     </main>
   </div>
 
-  <script src="js/app.js"></script>
+  <script src="js/app.js?v=2"></script>
   <script>
-    requireAuth();
-    initAppLayout('profile');
+    if (requireAuth()) {
+      initAppLayout('profile');
+
+      // Immediately populate UI with cached user details to prevent UI flicker
+      const initialCachedUser = getAuthUser();
+      if (initialCachedUser) {
+        populateProfileUI(initialCachedUser);
+      }
 
     async function loadProfile() {
       const alertContainer = document.getElementById('profile-alert-area');
@@ -241,15 +250,25 @@
 
       // Check /profile endpoint first, then fallback to /auth/me
       let result = await apiFetch('/profile');
-      if (!result.success && result.status === 404) {
-        result = await apiFetch('/auth/me');
+      if (!result.success) {
+        // Fallback to /auth/me
+        const fallback = await apiFetch('/auth/me');
+        if (fallback.success) {
+          result = fallback;
+        }
       }
 
       if (!result.success) {
+        // If request failed, render error banner with retry option
         renderErrorState(alertContainer, {
           message: result.error || 'Failed to load profile from backend server at ' + getApiBase(),
           onRetry: loadProfile
         });
+        // Make sure cached details remain visible
+        const cached = getAuthUser();
+        if (cached) {
+          populateProfileUI(cached);
+        }
         return;
       }
 
@@ -261,30 +280,73 @@
     function populateProfileUI(user) {
       if (!user) return;
 
-      const name = user.name || '';
+      const name = user.full_name || user.name || '';
       const email = user.email || '';
       const dept = user.department || 'Computer Science';
-      const year = user.year || '3rd Year';
+      const year = user.academic_year ? formatAcademicYear(user.academic_year) : (user.year ? formatAcademicYear(user.year) : '3rd Year');
       const bio = user.bio || '';
       const goals = user.learningGoals || user.goals || '';
       const created = user.createdAt ? formatDate(user.createdAt) : 'Registered Member';
-      const initial = (name || 'S').charAt(0).toUpperCase();
+      const initial = (name || 'S').trim().charAt(0).toUpperCase() || 'S';
 
       // Summary Card
-      document.getElementById('summary-name').textContent = name;
-      document.getElementById('summary-dept').textContent = dept;
-      document.getElementById('summary-email').textContent = email;
-      document.getElementById('summary-year').textContent = year;
-      document.getElementById('summary-created').textContent = created;
-      document.getElementById('profile-big-avatar').textContent = initial;
+      const summaryNameEl = document.getElementById('summary-name');
+      if (summaryNameEl) summaryNameEl.textContent = name || 'Student';
+      const summaryDeptEl = document.getElementById('summary-dept');
+      if (summaryDeptEl) summaryDeptEl.textContent = dept;
+      const summaryEmailEl = document.getElementById('summary-email');
+      if (summaryEmailEl) summaryEmailEl.textContent = email || '-';
+      const summaryYearEl = document.getElementById('summary-year');
+      if (summaryYearEl) summaryYearEl.textContent = year || '-';
+      const summaryCreatedEl = document.getElementById('summary-created');
+      if (summaryCreatedEl) summaryCreatedEl.textContent = created;
+      const avatarEl = document.getElementById('profile-big-avatar');
+      if (avatarEl) avatarEl.textContent = initial;
 
-      // Edit Form
-      document.getElementById('prof-name').value = name;
-      document.getElementById('prof-email').value = email;
-      document.getElementById('prof-dept').value = dept;
-      document.getElementById('prof-year').value = year;
-      document.getElementById('prof-bio').value = bio;
-      document.getElementById('prof-goals').value = goals;
+      // Edit Form inputs
+      const profNameEl = document.getElementById('prof-name');
+      if (profNameEl) profNameEl.value = name;
+      const profEmailEl = document.getElementById('prof-email');
+      if (profEmailEl) profEmailEl.value = email;
+      const profBioEl = document.getElementById('prof-bio');
+      if (profBioEl) profBioEl.value = bio;
+      const profGoalsEl = document.getElementById('prof-goals');
+      if (profGoalsEl) profGoalsEl.value = goals;
+
+      // Robust Department Select
+      const deptSelect = document.getElementById('prof-dept');
+      if (deptSelect && dept) {
+        let matched = false;
+        for (let i = 0; i < deptSelect.options.length; i++) {
+          if (deptSelect.options[i].value.toLowerCase() === dept.toLowerCase()) {
+            deptSelect.selectedIndex = i;
+            matched = true;
+            break;
+          }
+        }
+        if (!matched) {
+          for (let i = 0; i < deptSelect.options.length; i++) {
+            if (deptSelect.options[i].text.toLowerCase().includes(dept.toLowerCase()) ||
+                dept.toLowerCase().includes(deptSelect.options[i].value.toLowerCase())) {
+              deptSelect.selectedIndex = i;
+              break;
+            }
+          }
+        }
+      }
+
+      // Robust Year Select
+      const yearSelect = document.getElementById('prof-year');
+      if (yearSelect && year) {
+        const yearStr = String(year).toLowerCase();
+        for (let i = 0; i < yearSelect.options.length; i++) {
+          const optVal = yearSelect.options[i].value.toLowerCase();
+          if (optVal === yearStr || yearStr.includes(optVal) || optVal.includes(yearStr)) {
+            yearSelect.selectedIndex = i;
+            break;
+          }
+        }
+      }
     }
 
     // Save profile form submission
@@ -349,6 +411,7 @@
         const token = getAuthToken();
         const response = await fetch(`${getApiBase()}/profile/export`, {
           method: 'GET',
+          credentials: 'include',
           headers: {
             'Authorization': `Bearer ${token || ''}`,
             'Accept': 'application/xml, text/xml, */*'
@@ -386,8 +449,9 @@
       }
     });
 
-    window.refreshCurrentPageData = loadProfile;
-    loadProfile();
+      window.refreshCurrentPageData = loadProfile;
+      loadProfile();
+    }
   </script>
 </body>
 </html>

@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="description" content="CampusSkillConnect Student Dashboard — View your learning stats, skills, matches, and session requests.">
   <title>Dashboard — CampusSkillConnect</title>
   <link rel="stylesheet" href="css/style.css">
@@ -239,13 +242,11 @@
     </main>
   </div>
 
-  <script src="js/app.js"></script>
+  <script src="js/app.js?v=2"></script>
   <script>
-    // 1. Verify authentication
-    requireAuth();
-
-    // 2. Initialize layout
-    initAppLayout('dashboard');
+    if (requireAuth()) {
+      // 1. Initialize layout
+      initAppLayout('dashboard');
 
     // 3. Load dashboard data from backend API
     async function loadDashboardData() {
@@ -386,8 +387,9 @@
     // Expose for API URL switcher
     window.refreshCurrentPageData = loadDashboardData;
 
-    // Initial load
-    loadDashboardData();
+      // Initial load
+      loadDashboardData();
+    }
   </script>
 </body>
 </html>

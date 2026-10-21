@@ -170,7 +170,7 @@ router.post('/login', async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Login successful.',
-      token: req.sessionID || `session_${student.id}_${Date.now()}`,
+      token: `session_${student.id}_${Date.now()}`,
       user: sessionUserData
     });
 
@@ -185,19 +185,69 @@ router.post('/login', async (req, res) => {
 
 /**
  * GET /api/auth/me
- * Returns current authenticated student profile from session.
+ * Returns current authenticated student profile by reading the session
+ * and querying the MySQL database for the latest user record.
  */
-router.get('/me', (req, res) => {
-  if (req.session && req.session.user) {
+router.get('/me', async (req, res) => {
+  try {
+    let userId = req.session && req.session.user && req.session.user.id;
+
+    // Fallback: check Authorization header for Bearer token
+    if (!userId && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+      const token = req.headers.authorization.slice(7).trim();
+      const match = token.match(/^session_(\d+)/);
+      if (match) {
+        userId = parseInt(match[1], 10);
+      } else if (/^\d+$/.test(token)) {
+        userId = parseInt(token, 10);
+      }
+    }
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authenticated.'
+      });
+    }
+
+    const [rows] = await pool.execute(
+      'SELECT id, full_name, email, department, academic_year, created_at FROM users WHERE id = ? LIMIT 1',
+      [userId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Student account not found.'
+      });
+    }
+
+    const student = rows[0];
+    const userData = {
+      id: student.id,
+      name: student.full_name,
+      full_name: student.full_name,
+      email: student.email,
+      department: student.department,
+      year: student.academic_year,
+      academic_year: student.academic_year,
+      createdAt: student.created_at
+    };
+
+    // Keep session user data in sync with database
+    req.session.user = userData;
+
     return res.status(200).json({
       success: true,
-      user: req.session.user
+      user: userData
+    });
+  } catch (error) {
+    console.error('Error in /api/auth/me:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve authenticated student profile.'
     });
   }
-  return res.status(401).json({
-    success: false,
-    message: 'Not authenticated.'
-  });
 });
 
 /**

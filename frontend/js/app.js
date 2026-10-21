@@ -79,11 +79,16 @@ function setAuthUser(user) {
 }
 
 /**
- * Clear authentication session
+ * Clear authentication session and all cached user data
  */
 function clearAuth() {
   localStorage.removeItem(CSC_CONFIG.STORAGE_TOKEN_KEY);
   localStorage.removeItem(CSC_CONFIG.STORAGE_USER_KEY);
+  try {
+    sessionStorage.clear();
+  } catch (e) {
+    // Ignore if storage access is restricted
+  }
 }
 
 /**
@@ -95,12 +100,15 @@ function isAuthenticated() {
 
 /**
  * Protects an application page. If the user is not authenticated,
- * redirect them to login.html with a return redirect param.
+ * immediately hides page content and redirects to login.html.
  */
 function requireAuth() {
   if (!isAuthenticated()) {
+    if (document.body) {
+      document.body.style.display = 'none';
+    }
     const current = encodeURIComponent(window.location.pathname.split('/').pop() || 'dashboard.html');
-    window.location.href = `login.html?redirect=${current}`;
+    window.location.replace(`login.html?redirect=${current}`);
     return false;
   }
   return true;
@@ -112,27 +120,27 @@ function requireAuth() {
  */
 function redirectIfAuth() {
   if (isAuthenticated()) {
-    window.location.href = 'dashboard.html';
+    window.location.replace('dashboard.html');
     return true;
   }
   return false;
 }
 
 /**
- * Perform logout: calls POST /api/auth/logout, clears session, redirects to login.html
+ * Perform logout: calls POST /api/auth/logout with session credentials,
+ * clears token and cached user data, and redirects to login.html.
  */
 async function logoutUser() {
   try {
     await apiFetch('/auth/logout', { method: 'POST' });
   } catch (err) {
-    // Continue cleanup even if server is unreachable
     console.warn('Logout API notification failed or offline:', err);
   } finally {
     clearAuth();
     showToast('You have been signed out.', 'info');
     setTimeout(() => {
-      window.location.href = 'login.html';
-    }, 400);
+      window.location.replace('login.html');
+    }, 350);
   }
 }
 
@@ -164,9 +172,11 @@ async function apiFetch(endpoint, options = {}) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  // Destructure to prevent options from overriding credentials or headers
+  const { headers: _ignoredHeaders, credentials: _ignoredCreds, ...restOptions } = options;
   const fetchOptions = {
-    credentials: options.credentials || 'include',
-    ...options,
+    ...restOptions,
+    credentials: 'include',  // Always include cookies for session support
     headers
   };
 
@@ -174,8 +184,15 @@ async function apiFetch(endpoint, options = {}) {
     const response = await fetch(url, fetchOptions);
     const status = response.status;
 
-    // Handle 401 Unauthorized (session expired or invalid token)
-    if (status === 401 && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/register')) {
+    // Handle 401 Unauthorized — but NOT for /auth/me or /profile (handled with fallbacks on profile page)
+    // to avoid redirect loops on page load when no session cookie exists yet
+    if (
+      status === 401 &&
+      !endpoint.includes('/auth/login') &&
+      !endpoint.includes('/auth/register') &&
+      !endpoint.includes('/auth/me') &&
+      !endpoint.includes('/profile')
+    ) {
       clearAuth();
       showToast('Your session has expired. Please sign in again.', 'warning');
       setTimeout(() => {
@@ -374,11 +391,12 @@ document.addEventListener('click', (e) => {
 });
 
 // ==========================================================================
+// ==========================================================================
 // 7. Backend Connection & Health Status Indicator
 // ==========================================================================
 
 /**
- * Tests connection to backend and updates indicator badge
+ * Tests connection to backend health endpoint and updates indicator badge
  */
 async function checkBackendConnection() {
   const indicator = document.getElementById('backend-indicator');
@@ -391,18 +409,27 @@ async function checkBackendConnection() {
   dot.className = 'backend-dot';
 
   try {
-    // Quick test against /auth/me or base endpoint
-    const response = await fetch(`${getApiBase()}/auth/me`, {
+    const response = await fetch(`${getApiBase()}/health`, {
       method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${getAuthToken() || ''}`
-      }
+      credentials: 'include'
     });
 
-    // If server responds (even 401 Unauthorized), the backend server is online!
-    dot.className = 'backend-dot connected';
-    text.textContent = 'Backend Online';
-    indicator.title = `Connected to ${getApiBase()}`;
+    if (response.ok) {
+      const data = await response.json();
+      if (data.database === 'connected' || data.status === 'ok') {
+        dot.className = 'backend-dot connected';
+        text.textContent = 'Backend Online';
+        indicator.title = `Connected to ${getApiBase()} (Database: connected)`;
+      } else {
+        dot.className = 'backend-dot error';
+        text.textContent = 'DB Offline';
+        indicator.title = `Backend reachable but database is disconnected`;
+      }
+    } else {
+      dot.className = 'backend-dot error';
+      text.textContent = 'Backend Error';
+      indicator.title = `Backend returned status ${response.status}`;
+    }
   } catch (err) {
     dot.className = 'backend-dot error';
     text.textContent = 'Backend Offline';
@@ -466,25 +493,78 @@ function openApiConfigModal() {
 // ==========================================================================
 
 /**
- * Initializes sidebar, active nav highlights, user info, and mobile menu
+ * Formats academic year values (numeric or text) for consistent UI display
  */
-function initAppLayout(activePageName) {
-  // 1. Populate current user info in sidebar & topbar if authenticated
-  const user = getAuthUser();
-  if (user) {
-    const nameEls = document.querySelectorAll('[data-user-name]');
-    const deptEls = document.querySelectorAll('[data-user-dept]');
-    const avatarEls = document.querySelectorAll('[data-user-avatar]');
+function formatAcademicYear(year) {
+  if (!year) return 'Student';
+  if (typeof year === 'string' && year.toLowerCase().includes('year')) return year;
+  const num = parseInt(year, 10);
+  if (isNaN(num)) return String(year);
+  if (num === 1) return '1st Year';
+  if (num === 2) return '2nd Year';
+  if (num === 3) return '3rd Year';
+  if (num === 4) return '4th Year';
+  if (num >= 5) return 'Postgraduate';
+  return `${num}th Year`;
+}
 
-    nameEls.forEach(el => el.textContent = user.name || 'Student');
-    deptEls.forEach(el => el.textContent = `${user.department || 'Department'} • ${user.year || 'Student'}`);
-    avatarEls.forEach(el => {
-      const initial = (user.name || 'S').charAt(0).toUpperCase();
-      el.textContent = initial;
-    });
+/**
+ * Updates all student name, role/dept, and avatar elements across the current page
+ */
+function updateUserUI(user) {
+  if (!user) return;
+  const displayName = user.full_name || user.name || 'Student';
+  const department = user.department || 'Department';
+  const yearText = formatAcademicYear(user.academic_year || user.year);
+  const roleText = `${department} • ${yearText}`;
+  const initial = displayName.trim().charAt(0).toUpperCase() || 'S';
+
+  const nameEls = document.querySelectorAll('[data-user-name]');
+  const deptEls = document.querySelectorAll('[data-user-dept]');
+  const avatarEls = document.querySelectorAll('[data-user-avatar]');
+
+  nameEls.forEach(el => el.textContent = displayName);
+  deptEls.forEach(el => el.textContent = roleText);
+  avatarEls.forEach(el => el.textContent = initial);
+}
+
+/**
+ * Displays a clear error in place of student name when the profile request fails
+ */
+function setUserUIError(message) {
+  const nameEls = document.querySelectorAll('[data-user-name]');
+  const deptEls = document.querySelectorAll('[data-user-dept]');
+  nameEls.forEach(el => el.textContent = 'Error loading user');
+  deptEls.forEach(el => el.textContent = message || 'Not authenticated');
+}
+
+/**
+ * Initializes sidebar, active nav highlights, authenticated student info, and mobile menu.
+ * Waits for the current-user request (/api/auth/me) to ensure the logged-in student's
+ * actual name is rendered in the sidebar.
+ */
+async function initAppLayout(activePageName) {
+  // 1. Immediately render cached student info to prevent UI flicker
+  const cachedUser = getAuthUser();
+  if (cachedUser) {
+    updateUserUI(cachedUser);
   }
 
-  // 2. Highlight current active navigation link
+  // 2. Initialize connection indicator immediately
+  const indicator = document.getElementById('backend-indicator');
+  if (indicator) {
+    indicator.addEventListener('click', openApiConfigModal);
+    checkBackendConnection();
+  }
+
+  // 3. Highlight active link and ensure nav links bypass stale browser cache
+  document.querySelectorAll('a.nav-menu-link').forEach(link => {
+    const href = link.getAttribute('href');
+    if (href && href.endsWith('.html')) {
+      link.setAttribute('href', `${href}?v=2`);
+    }
+  });
+
   if (activePageName) {
     const activeLink = document.querySelector(`.nav-menu-link[data-page="${activePageName}"]`);
     if (activeLink) {
@@ -492,7 +572,7 @@ function initAppLayout(activePageName) {
     }
   }
 
-  // 3. Mobile sidebar toggle
+  // 4. Mobile sidebar toggle
   const mobileToggle = document.getElementById('mobile-sidebar-toggle');
   const sidebar = document.querySelector('.app-sidebar');
   let backdrop = document.querySelector('.sidebar-backdrop');
@@ -515,22 +595,33 @@ function initAppLayout(activePageName) {
     });
   }
 
-  // 4. Logout button listener
+  // 5. Logout button listener
   const logoutButtons = document.querySelectorAll('[data-action="logout"]');
   logoutButtons.forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
-      if (confirm('Are you sure you want to sign out of CampusSkillConnect?')) {
-        logoutUser();
-      }
+      logoutUser();
     });
   });
 
-  // 5. Backend connection indicator click opens config modal
-  const indicator = document.getElementById('backend-indicator');
-  if (indicator) {
-    indicator.addEventListener('click', openApiConfigModal);
-    checkBackendConnection();
+  // 6. Fetch the latest authenticated student from backend GET /api/auth/me
+  // Waits for the current-user request and renders the actual student's name
+  try {
+    const meResult = await apiFetch('/auth/me');
+    if (meResult.success && meResult.data) {
+      const currentUser = meResult.data.user || meResult.data;
+      setAuthUser(currentUser);
+      updateUserUI(currentUser);
+    } else {
+      if (meResult.isNetworkError) {
+        setUserUIError('Backend Offline');
+      } else if (meResult.status !== 401) {
+        setUserUIError(meResult.error || 'Failed to load profile');
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load current student profile:', err);
+    setUserUIError('Connection Error');
   }
 }
 
