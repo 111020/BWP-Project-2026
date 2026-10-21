@@ -123,12 +123,18 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+// Serve static frontend files
+app.use(express.static(path.join(__dirname, '../frontend')));
+
+// Root route: Serve frontend index.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/index.html'));
+});
+
 // Start the server
 app.listen(PORT, () => {
-  console.log(`Server started successfully on port ${PORT}`);
-  console.log(`Health check endpoint available at: http://localhost:${PORT}/api/health`);
-  console.log(`Auth endpoints available at: http://localhost:${PORT}/api/auth`);
-  console.log(`Skills endpoints available at: http://localhost:${PORT}/api/skills`);
-  console.log(`Matches endpoints available at: http://localhost:${PORT}/api/matches`);
-  console.log(`Sessions endpoints available at: http://localhost:${PORT}/api/sessions`);
+  console.log('\n======================================================');
+  console.log(`  🚀 CampusSkillConnect is running!`);
+  console.log(`  👉 Open your website: http://localhost:${PORT}`);
+  console.log('======================================================\n');
 });

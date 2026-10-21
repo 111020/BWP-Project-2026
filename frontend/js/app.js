@@ -550,12 +550,13 @@ async function initAppLayout(activePageName) {
     updateUserUI(cachedUser);
   }
 
-  // 2. Initialize connection indicator immediately
+  // 2. Initialize connection indicator and theme toggle immediately
   const indicator = document.getElementById('backend-indicator');
   if (indicator) {
     indicator.addEventListener('click', openApiConfigModal);
     checkBackendConnection();
   }
+  initThemeToggle();
 
   // 3. Highlight active link and ensure nav links bypass stale browser cache
   document.querySelectorAll('a.nav-menu-link').forEach(link => {
@@ -674,4 +675,81 @@ function formatTime(timeString) {
   const ampm = hours >= 12 ? 'PM' : 'AM';
   hours = hours % 12 || 12;
   return `${hours}:${minutes} ${ampm}`;
+}
+
+// ==========================================================================
+// 10. Theme Management (Light / Dark Mode)
+// Uses dedicated localStorage key 'csc_theme' (does not affect auth keys)
+// ==========================================================================
+
+const CSC_THEME_STORAGE_KEY = 'csc_theme';
+
+/**
+ * Resolves current theme preference ('dark' or 'light')
+ */
+function getPreferredTheme() {
+  const saved = localStorage.getItem(CSC_THEME_STORAGE_KEY);
+  if (saved === 'dark' || saved === 'light') return saved;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+/**
+ * Applies theme to the document and updates all toggle buttons
+ */
+function applyTheme(theme) {
+  const resolvedTheme = theme === 'dark' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', resolvedTheme);
+  
+  // Update all theme toggle buttons across the page
+  document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+    const isDark = resolvedTheme === 'dark';
+    btn.setAttribute('aria-label', `Switch to ${isDark ? 'light' : 'dark'} mode`);
+    btn.setAttribute('title', `Switch to ${isDark ? 'light' : 'dark'} mode`);
+    const iconEl = btn.querySelector('.theme-toggle-icon');
+    if (iconEl) {
+      iconEl.textContent = isDark ? '☀️' : '🌙';
+    }
+  });
+}
+
+/**
+ * Toggles theme between 'light' and 'dark' and persists to csc_theme
+ */
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || getPreferredTheme();
+  const next = current === 'dark' ? 'light' : 'dark';
+  try {
+    localStorage.setItem(CSC_THEME_STORAGE_KEY, next);
+  } catch (e) {
+    // Ignore if localStorage quota/permissions restricted
+  }
+  applyTheme(next);
+}
+
+/**
+ * Initializes theme toggle buttons and listens for system preference changes
+ */
+function initThemeToggle() {
+  applyTheme(getPreferredTheme());
+
+  document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+    btn.removeEventListener('click', toggleTheme);
+    btn.addEventListener('click', toggleTheme);
+  });
+
+  // Listen to system preference changes if user hasn't explicitly set a preference
+  if (window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      if (!localStorage.getItem(CSC_THEME_STORAGE_KEY)) {
+        applyTheme(e.matches ? 'dark' : 'light');
+      }
+    });
+  }
+}
+
+// Auto-run on load
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initThemeToggle);
+} else {
+  initThemeToggle();
 }

@@ -7,8 +7,19 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <meta name="description" content="View and edit your CampusSkillConnect student profile.">
+  <meta name="color-scheme" content="light dark">
   <title>Student Profile — CampusSkillConnect</title>
+  <!-- Bootstrap 5.3 CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="css/style.css">
+  <script>
+    (function(){
+      try {
+        const t = localStorage.getItem('csc_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body class="app-layout">
 
@@ -18,20 +29,20 @@
   <aside class="app-sidebar">
     <div class="sidebar-header">
       <a href="dashboard.html" class="brand-logo">
-        <span class="brand-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        <span class="brand-rhombus-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M11 3L3 11V13L11 21V3Z" fill="currentColor"/>
+            <path d="M13 3L21 11V13L13 21V16L18 12L13 8V3Z" fill="currentColor"/>
           </svg>
         </span>
-        <span>SkillConnect</span>
+        <span>CampusSkillConnect</span>
       </a>
     </div>
 
     <!-- Authenticated Student Mini Card -->
     <div class="sidebar-user">
       <div class="sidebar-avatar" data-user-avatar>?</div>
-      <div style="min-width: 0;">
+      <div style="min-width: 0; flex: 1;">
         <div class="sidebar-user-name" data-user-name>Loading...</div>
         <div class="sidebar-user-role" data-user-dept>Student</div>
       </div>
@@ -73,7 +84,7 @@
     </nav>
 
     <div class="sidebar-footer">
-      <button class="nav-menu-link" style="width: 100%; border: none; text-align: left;" data-action="logout">
+      <button class="nav-menu-link" style="width: 100%; border: none; text-align: left; color: var(--color-danger);" data-action="logout">
         <span class="nav-menu-icon">🚪</span>
         <span>Sign Out</span>
       </button>
@@ -94,6 +105,10 @@
       </div>
 
       <div class="topbar-right">
+        <!-- Dark Mode Toggle Button -->
+        <button type="button" class="theme-toggle-btn" aria-label="Toggle Dark Mode" title="Toggle theme">
+          <span class="theme-toggle-icon">🌙</span>
+        </button>
         <!-- XML Export Button (Contract: GET /api/profile/export) -->
         <button class="btn btn-outline btn-sm" id="btn-export-xml">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -119,31 +134,31 @@
         
         <!-- Profile Identity Summary Card (1 Col) -->
         <div class="card" style="text-align: center;">
-          <div style="display: flex; justify-content: center; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: center; margin-bottom: 18px;">
             <div 
               id="profile-big-avatar" 
-              style="width: 80px; height: 80px; border-radius: 20px; background: var(--accent-gradient); color: #FFF; font-weight: 800; font-size: 2rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgba(108, 92, 231, 0.3);"
+              style="width: 84px; height: 84px; border-radius: 22px; background: var(--accent-gradient); color: #FFF; font-weight: 800; font-size: 2.1rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(108, 92, 231, 0.35);"
             >
               ?
             </div>
           </div>
 
-          <h2 id="summary-name" style="font-size: 1.35rem; font-weight: 700; margin-bottom: 4px;">Loading...</h2>
+          <h2 id="summary-name" style="font-size: 1.35rem; font-weight: 700; margin-bottom: 4px; color: var(--text-primary);">Loading...</h2>
           <div id="summary-dept" class="text-sm text-secondary" style="margin-bottom: 14px;">College Student</div>
           <span class="badge badge-accent" id="summary-badge">Verified Student</span>
 
-          <div style="border-top: 1px solid var(--border-light); margin-top: 20px; padding-top: 20px; text-align: left; font-size: 0.88rem; display: flex; flex-direction: column; gap: 10px;">
+          <div style="border-top: 1px solid var(--border-light); margin-top: 22px; padding-top: 20px; text-align: left; font-size: 0.88rem; display: flex; flex-direction: column; gap: 12px;">
             <div>
-              <span class="text-muted">Email:</span>
-              <div id="summary-email" style="font-weight: 600; word-break: break-all;">-</div>
+              <span class="text-muted" style="font-size: 0.8rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.04em;">Email:</span>
+              <div id="summary-email" style="font-weight: 600; word-break: break-all; color: var(--text-primary); margin-top: 2px;">-</div>
             </div>
             <div>
-              <span class="text-muted">Academic Year:</span>
-              <div id="summary-year" style="font-weight: 600;">-</div>
+              <span class="text-muted" style="font-size: 0.8rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.04em;">Academic Year:</span>
+              <div id="summary-year" style="font-weight: 600; color: var(--text-primary); margin-top: 2px;">-</div>
             </div>
             <div>
-              <span class="text-muted">Account Created:</span>
-              <div id="summary-created" style="font-weight: 600;">-</div>
+              <span class="text-muted" style="font-size: 0.8rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.04em;">Account Created:</span>
+              <div id="summary-created" style="font-weight: 600; color: var(--text-primary); margin-top: 2px;">-</div>
             </div>
           </div>
         </div>
@@ -151,8 +166,11 @@
         <!-- Edit Profile Form (2 Cols) -->
         <div class="card" style="grid-column: span 2;">
           <div class="card-header">
-            <h2 class="card-title">Edit Profile Information</h2>
-            <span class="text-xs text-muted">Updates will reflect across all peer matching searches</span>
+            <div>
+              <h2 class="card-title">Edit Profile Information</h2>
+              <p class="text-xs text-secondary" style="margin-top: 3px;">Updates will reflect across all peer matching searches</p>
+            </div>
+            <span class="text-xs text-muted">All fields marked with * are required</span>
           </div>
 
           <form id="edit-profile-form">
@@ -225,9 +243,9 @@
               ></textarea>
             </div>
 
-            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 10px;">
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 14px;">
               <button type="submit" class="btn btn-primary" id="btn-save-profile">
-                <span id="prof-btn-text">Save Profile Changes</span>
+                <span id="prof-btn-text">Save Profile Changes &rarr;</span>
                 <span id="prof-btn-spinner" class="spinner spinner-sm" style="display: none; border-color: rgba(255,255,255,0.4); border-top-color: #fff;"></span>
               </button>
             </div>
@@ -239,6 +257,8 @@
     </main>
   </div>
 
+  <!-- Bootstrap 5.3 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/app.js?v=2"></script>
   <script>
     if (requireAuth()) {

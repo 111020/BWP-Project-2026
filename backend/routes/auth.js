@@ -1,6 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const pool = require('../db');
+const { sendLoginOtpEmail } = require('../mailer');
 
 const router = express.Router();
 
@@ -109,8 +110,12 @@ router.post('/register', async (req, res) => {
 
 /**
  * POST /api/auth/login
- * Handles student login: verifies credentials with bcryptjs, creates session
- * using express-session, and returns sanitized student profile.
+ * Handles student login:
+ * 1. Verifies credentials with bcryptjs.
+ * 2. Checks if the student has verified an OTP within the last 4 hours (4 * 60 * 60 * 1000 ms).
+ *    - If YES: logs in directly without OTP!
+ *    - If NO: generates a 6-digit OTP, stores it in login_otps, dispatches email via Nodemailer SMTP,
+ *      and returns { success: true, requireOtp: true, email }.
  */
 router.post('/login', async (req, res) => {
   try {
@@ -127,13 +132,13 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // 2. Query student from users table using parameterized SQL query
+    // 2. Query student from users table including last_otp_verified_at
     const [rows] = await pool.execute(
-      'SELECT id, full_name, email, password_hash, department, academic_year FROM users WHERE email = ? LIMIT 1',
+      'SELECT id, full_name, email, password_hash, department, academic_year, last_otp_verified_at FROM users WHERE email = ? LIMIT 1',
       [studentEmail]
     );
 
-    // Standardized authentication failure message (do not reveal if email is registered)
+    // Standardized authentication failure message (prevents user enumeration)
     const invalidAuthResponse = {
       success: false,
       message: 'Invalid email or password.'
@@ -151,7 +156,171 @@ router.post('/login', async (req, res) => {
       return res.status(401).json(invalidAuthResponse);
     }
 
-    // 4. Create session using express-session (never store passwords in session)
+    // 4. Check 4-Hour Direct Login Window Exemption
+    const FOUR_HOURS_MS = 4 * 60 * 60 * 1000;
+    let canBypassOtp = false;
+    let bypassRemainingMinutes = 0;
+
+    if (student.last_otp_verified_at) {
+      const lastVerifiedTime = new Date(student.last_otp_verified_at).getTime();
+      const elapsedMs = Date.now() - lastVerifiedTime;
+      if (elapsedMs >= 0 && elapsedMs < FOUR_HOURS_MS) {
+        canBypassOtp = true;
+        bypassRemainingMinutes = Math.round((FOUR_HOURS_MS - elapsedMs) / 60000);
+      }
+    }
+
+    const sessionUserData = {
+      id: student.id,
+      name: student.full_name,
+      full_name: student.full_name,
+      email: student.email,
+      department: student.department,
+      year: student.academic_year,
+      academic_year: student.academic_year
+    };
+
+    // 4A. If verified within 4 hours: direct login without OTP!
+    if (canBypassOtp) {
+      if (req.session) {
+        req.session.user = sessionUserData;
+      }
+
+      console.log(`⚡ [DIRECT LOGIN] Student ${student.email} logged in without OTP (within 4-hr window, ~${bypassRemainingMinutes} mins remaining).`);
+
+      return res.status(200).json({
+        success: true,
+        requireOtp: false,
+        bypassedOtp: true,
+        bypassRemainingMinutes,
+        message: 'Login successful. (Direct login enabled within 4-hour window).',
+        token: `session_${student.id}_${Date.now()}`,
+        user: sessionUserData
+      });
+    }
+
+    // 4B. Not verified within 4 hours: Generate 6-digit OTP and send via Nodemailer
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+
+    // Invalidate previous pending OTPs for this user
+    await pool.execute(
+      'UPDATE login_otps SET verified_at = "1970-01-01 00:00:00" WHERE user_id = ? AND verified_at IS NULL',
+      [student.id]
+    );
+
+    // Insert new pending OTP record
+    await pool.execute(
+      'INSERT INTO login_otps (user_id, email, otp_code, expires_at) VALUES (?, ?, ?, ?)',
+      [student.id, student.email, otpCode, expiresAt]
+    );
+
+    // Dispatch email via Nodemailer SMTP service
+    const mailResult = await sendLoginOtpEmail({
+      toEmail: student.email,
+      studentName: student.full_name,
+      otpCode,
+      expiresMinutes: 10
+    });
+
+    return res.status(200).json({
+      success: true,
+      requireOtp: true,
+      message: 'A 6-digit verification code has been sent to your email.',
+      email: student.email,
+      tempToken: `temp_${student.id}_${Date.now()}`,
+      simulated: mailResult.simulated || false,
+      expiresInMinutes: 10
+    });
+
+  } catch (error) {
+    console.error('Login error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'A database error occurred during login. Please try again.'
+    });
+  }
+});
+
+/**
+ * POST /api/auth/verify-otp
+ * Verifies the 6-digit OTP submitted by the student:
+ * 1. Checks matching unverified code in login_otps within 10-minute validity.
+ * 2. On success, sets last_otp_verified_at = NOW() on the user record.
+ *    This enables direct login without OTP for the next 4 hours!
+ * 3. Creates session and returns authenticated student profile and token.
+ */
+router.post('/verify-otp', async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    const studentEmail = (email || '').trim().toLowerCase();
+    const enteredOtp = (otp || '').trim();
+
+    if (!studentEmail || !enteredOtp) {
+      return res.status(400).json({
+        success: false,
+        message: 'Both email and the 6-digit verification code are required.'
+      });
+    }
+
+    // Query active unverified OTP for this email
+    const [rows] = await pool.execute(
+      'SELECT id, user_id, otp_code, expires_at FROM login_otps WHERE email = ? AND verified_at IS NULL ORDER BY id DESC LIMIT 1',
+      [studentEmail]
+    );
+
+    if (rows.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No active verification code found. Please request a new one.'
+      });
+    }
+
+    const otpRecord = rows[0];
+
+    // Check expiration
+    if (new Date(otpRecord.expires_at) < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: 'The verification code has expired. Please request a new code.'
+      });
+    }
+
+    // Check OTP match
+    if (otpRecord.otp_code !== enteredOtp) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid verification code. Please check your email and try again.'
+      });
+    }
+
+    // Valid OTP! Mark OTP as verified
+    await pool.execute(
+      'UPDATE login_otps SET verified_at = NOW() WHERE id = ?',
+      [otpRecord.id]
+    );
+
+    // Update user's last_otp_verified_at timestamp (Starts 4-hour direct login exemption)
+    await pool.execute(
+      'UPDATE users SET last_otp_verified_at = NOW() WHERE id = ?',
+      [otpRecord.user_id]
+    );
+
+    // Query authenticated student profile
+    const [userRows] = await pool.execute(
+      'SELECT id, full_name, email, department, academic_year FROM users WHERE id = ? LIMIT 1',
+      [otpRecord.user_id]
+    );
+
+    if (userRows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Student account not found.'
+      });
+    }
+
+    const student = userRows[0];
     const sessionUserData = {
       id: student.id,
       name: student.full_name,
@@ -166,20 +335,158 @@ router.post('/login', async (req, res) => {
       req.session.user = sessionUserData;
     }
 
-    // 5. Return success response with safe student data (never return password or hash)
+    console.log(`✅ [OTP VERIFIED] Student ${student.email} successfully verified OTP. 4-hour direct login window is now active.`);
+
+    const FOUR_HOURS_MS = 4 * 60 * 60 * 1000;
+    const directLoginUntil = new Date(Date.now() + FOUR_HOURS_MS).toISOString();
+
     return res.status(200).json({
       success: true,
-      message: 'Login successful.',
+      message: 'OTP verified successfully! You can log in directly without OTP for the next 4 hours.',
       token: `session_${student.id}_${Date.now()}`,
+      directLoginUntil,
       user: sessionUserData
     });
 
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('OTP verification error:', error);
     return res.status(500).json({
       success: false,
-      message: 'A database error occurred during login. Please try again.'
+      message: 'A database error occurred during verification. Please try again.'
     });
+  }
+});
+
+/**
+ * POST /api/auth/resend-otp
+ * Resends a fresh 6-digit OTP code to the student's email via Nodemailer.
+ * Includes a 20-second rate limiter to prevent email flooding.
+ */
+router.post('/resend-otp', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const studentEmail = (email || '').trim().toLowerCase();
+
+    if (!studentEmail) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email address is required.'
+      });
+    }
+
+    const [userRows] = await pool.execute(
+      'SELECT id, full_name, email FROM users WHERE email = ? LIMIT 1',
+      [studentEmail]
+    );
+
+    if (userRows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Student account not found.'
+      });
+    }
+
+    const student = userRows[0];
+
+    // Rate-limit: Check if an OTP was sent in the last 20 seconds
+    const [recentOtps] = await pool.execute(
+      'SELECT created_at FROM login_otps WHERE user_id = ? ORDER BY id DESC LIMIT 1',
+      [student.id]
+    );
+
+    if (recentOtps.length > 0) {
+      const lastSentTime = new Date(recentOtps[0].created_at).getTime();
+      const elapsedSeconds = (Date.now() - lastSentTime) / 1000;
+      if (elapsedSeconds < 20) {
+        const waitSec = Math.ceil(20 - elapsedSeconds);
+        return res.status(429).json({
+          success: false,
+          message: `Please wait ${waitSec} seconds before requesting another code.`
+        });
+      }
+    }
+
+    // Invalidate previous pending OTPs
+    await pool.execute(
+      'UPDATE login_otps SET verified_at = "1970-01-01 00:00:00" WHERE user_id = ? AND verified_at IS NULL',
+      [student.id]
+    );
+
+    // Generate fresh OTP
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    await pool.execute(
+      'INSERT INTO login_otps (user_id, email, otp_code, expires_at) VALUES (?, ?, ?, ?)',
+      [student.id, student.email, otpCode, expiresAt]
+    );
+
+    const mailResult = await sendLoginOtpEmail({
+      toEmail: student.email,
+      studentName: student.full_name,
+      otpCode,
+      expiresMinutes: 10
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'A new 6-digit verification code has been sent to your email.',
+      simulated: mailResult.simulated || false
+    });
+
+  } catch (error) {
+    console.error('Resend OTP error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Could not resend verification code. Please try again.'
+    });
+  }
+});
+
+/**
+ * GET /api/auth/otp-status
+ * Helper endpoint to inspect whether an email address is currently
+ * within the 4-hour direct login exemption window.
+ */
+router.get('/otp-status', async (req, res) => {
+  try {
+    const email = (req.query.email || '').trim().toLowerCase();
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email query parameter required.' });
+    }
+
+    const [rows] = await pool.execute(
+      'SELECT id, email, last_otp_verified_at FROM users WHERE email = ? LIMIT 1',
+      [email]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    const user = rows[0];
+    const FOUR_HOURS_MS = 4 * 60 * 60 * 1000;
+    let isExempt = false;
+    let remainingMinutes = 0;
+
+    if (user.last_otp_verified_at) {
+      const elapsed = Date.now() - new Date(user.last_otp_verified_at).getTime();
+      if (elapsed >= 0 && elapsed < FOUR_HOURS_MS) {
+        isExempt = true;
+        remainingMinutes = Math.round((FOUR_HOURS_MS - elapsed) / 60000);
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      email: user.email,
+      last_otp_verified_at: user.last_otp_verified_at,
+      directLoginActive: isExempt,
+      remainingMinutes
+    });
+
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
   }
 });
 

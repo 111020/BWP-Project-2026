@@ -1,225 +1,239 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="CampusSkillConnect — A peer-to-peer student learning exchange platform where college students can teach skills they know and learn skills from peers.">
-  <title>CampusSkillConnect — Peer-to-Peer Student Learning Exchange</title>
+  <meta name="description"
+    content="CampusSkillConnect — A peer-to-peer student learning exchange platform where college students can teach skills they know and learn skills from peers.">
+  <meta name="color-scheme" content="light dark">
+  <title>CampusSkillConnect — Master Skills, Achieve Goals</title>
+
+  <!-- Bootstrap 5.3 CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+
+  <!-- Custom Editorial Design System (Swiss Modernism / Warm Linen & Terracotta) -->
   <link rel="stylesheet" href="css/style.css">
+
+  <script>
+    (function () {
+      try {
+        const t = localStorage.getItem('csc_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) { }
+    })();
+  </script>
 </head>
+
 <body>
 
   <!-- ========================================================================
-       Top Navigation Bar
+       Top Navigation Bar (SkillForge Editorial Minimalist Style)
        ======================================================================== -->
   <header class="navbar">
     <div class="container nav-container">
-      <a href="index.html" class="brand-logo" id="landing-logo">
-        <span class="brand-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-            <path d="M12 6v6"></path>
-            <path d="M9 9h6"></path>
-          </svg>
-        </span>
-        <span>CampusSkillConnect</span>
-      </a>
+      <div class="brand-wrapper">
+        <a href="index.html" class="brand-logo" id="landing-logo">
+          <span class="brand-rhombus-icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M11 3L3 11V13L11 21V3Z" fill="currentColor" />
+              <path d="M13 3L21 11V13L13 21V16L18 12L13 8V3Z" fill="currentColor" />
+            </svg>
+          </span>
+          <span>CampusSkillConnect</span>
+        </a>
 
-      <nav class="nav-links" id="main-nav-links">
-        <a href="#how-it-works" class="nav-link">How It Works</a>
-        <a href="#features" class="nav-link">Features</a>
-        <a href="#about" class="nav-link">About Platform</a>
-      </nav>
+        <div class="nav-divider-line d-none d-md-block"></div>
+
+        <nav class="nav-links d-none d-md-flex" id="main-nav-links">
+          <a href="#how-it-works" class="nav-link">How It Works</a>
+          <a href="#features" class="nav-link">Features</a>
+          <a href="#about" class="nav-link">About Platform</a>
+        </nav>
+      </div>
 
       <div class="nav-actions">
-        <a href="login.html" class="btn btn-outline btn-sm" id="nav-btn-login">Login</a>
-        <a href="register.html" class="btn btn-primary btn-sm" id="nav-btn-register">Get Started</a>
-        <button class="mobile-menu-btn" id="mobile-landing-toggle" aria-label="Toggle Navigation Menu">☰</button>
+        <!-- Dark Mode Toggle Button -->
+        <button type="button" class="theme-toggle-btn" aria-label="Toggle Dark Mode" title="Toggle theme">
+          <span class="theme-toggle-icon">🌙</span>
+        </button>
+        <a href="login.html" class="btn btn-secondary btn-sm" id="nav-btn-login">Login</a>
+        <a href="register.html" class="btn btn-outline btn-sm" id="nav-btn-register">Join Now ↗</a>
+        <button class="mobile-menu-btn d-md-none" id="mobile-landing-toggle"
+          aria-label="Toggle Navigation Menu">☰</button>
       </div>
     </div>
 
-    <!-- Mobile Nav Drawer (Hidden on Desktop) -->
+    <!-- Mobile Nav Drawer -->
     <div class="mobile-nav-drawer" id="mobile-landing-drawer" style="display: none;">
       <a href="#how-it-works" class="nav-link">How It Works</a>
       <a href="#features" class="nav-link">Features</a>
       <a href="#about" class="nav-link">About Platform</a>
-      <div style="display: flex; gap: 10px; margin-top: 10px;">
-        <a href="login.html" class="btn btn-outline btn-sm" style="flex: 1;">Login</a>
-        <a href="register.html" class="btn btn-primary btn-sm" style="flex: 1;">Get Started</a>
+      <div class="d-flex gap-2 mt-2">
+        <a href="login.html" class="btn btn-secondary btn-sm flex-fill">Login</a>
+        <a href="register.html" class="btn btn-primary btn-sm flex-fill">Join Now ↗</a>
       </div>
     </div>
   </header>
 
   <!-- ========================================================================
-       Hero Section
+       Hero Section (Master Skills Achieve Goals Editorial Bento Grid)
        ======================================================================== -->
   <main>
-    <section class="hero-section">
+    <section class="hero-editorial">
       <div class="container">
-        <div class="hero-content">
-          <div class="hero-badge">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            Peer-to-Peer Student Knowledge Exchange
+
+        <!-- Top Editorial Hero Row -->
+        <div class="hero-editorial-grid">
+
+          <!-- Left Column: Giant Stacked Typography + Action -->
+          <div class="hero-left-block">
+            <h1 class="hero-headline-stacked">
+              <span>Master Skills</span>
+              <span>Achieve</span>
+              <span>Goals</span>
+            </h1>
+
+            <div class="hero-actions-group">
+              <a href="register.html" class="btn btn-primary btn-lg" id="hero-cta-find">
+                Start Learning Today
+              </a>
+              <a href="register.html" class="btn btn-secondary btn-lg" id="hero-cta-share">
+                Share Your Skills ↗
+              </a>
+            </div>
           </div>
 
-          <h1 class="hero-title">
-            Learn Together. <br>
-            <span class="highlight">Grow Together.</span>
-          </h1>
+          <!-- Center Column: Vertical Student Portrait + Overlapping Orange Bento Card -->
+          <div class="hero-center-bento">
+            <div class="hero-portrait-frame">
+              <img src="img/msulibrary.jpg" alt="Smiling student learner holding books" loading="eager">
+            </div>
 
-          <p class="hero-subtitle">
-            Exchange skills directly with fellow students across your campus. Teach what you excel at, learn what you are curious about, and collaborate one-on-one — zero cost, 100% peer-powered.
-          </p>
-
-          <div class="hero-cta">
-            <a href="register.html" class="btn btn-primary btn-lg" id="hero-cta-find">
-              Find Your Learning Partner
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </a>
-            <a href="register.html" class="btn btn-secondary btn-lg" id="hero-cta-share">
-              Share Your Skills
-            </a>
+            <div class="bento-orange-card hero-overlap-bento-card">
+              <div>
+                <!-- <div class="bento-orange-num">200+</div> -->
+                <div class="bento-orange-title">Expert Mentors</div>
+              </div>
+              <p class="bento-orange-text">
+                Passionate peers &amp; students guiding your learning journey.
+              </p>
+            </div>
           </div>
+
+          <!-- Right Column: Editorial Text & High-Contrast Stat -->
+          <div class="hero-right-col">
+            <div class="stat-editorial-top">
+              learners from around campus.
+            </div>
+            <div class="stat-editorial-bottom">
+              <!-- <div class="stat-huge-number">50K+</div> -->
+              <div class="stat-huge-label">Students Enrolled</div>
+            </div>
+          </div>
+
         </div>
 
-        <!-- Tasteful CSS/SVG Visual Illustrating Peer Skill Exchange -->
-        <div class="exchange-visual-container">
-          <div class="exchange-visual-card">
-            <div class="exchange-grid">
-              
-              <!-- Student Card 1 -->
-              <div class="peer-card">
-                <div class="peer-header">
-                  <div class="peer-avatar">A</div>
-                  <div>
-                    <div class="peer-name">Student A</div>
-                    <div class="peer-dept">Computer Science &bull; 3rd Year</div>
-                  </div>
-                </div>
-                <div class="peer-skill-group">
-                  <div class="peer-skill-label">Can Teach</div>
-                  <div class="peer-tags">
-                    <span class="peer-tag tag-teaching">Python Programming</span>
-                    <span class="peer-tag tag-teaching">Data Structures</span>
-                  </div>
-                </div>
-                <div class="peer-skill-group" style="margin-bottom: 0;">
-                  <div class="peer-skill-label">Wants to Learn</div>
-                  <div class="peer-tags">
-                    <span class="peer-tag tag-learning">UI/UX Design</span>
-                    <span class="peer-tag tag-learning">Figma Basics</span>
-                  </div>
-                </div>
-              </div>
+        <!-- Lower Editorial Grid (Graduation Photo + Mission Text + Geometric Rhombus) -->
+        <div class="editorial-lower-grid">
+          <!-- Left: Graduation Celebration Photo -->
+          <div class="editorial-graduates-frame">
+            <img src="img/msutecho.jpg" alt="College graduates throwing caps in celebration" loading="lazy"
+              style="height: fit-content;">
+          </div>
 
-              <!-- Mutual Exchange Connector -->
-              <div class="exchange-connector">
-                <div class="exchange-badge-bubble">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="17 1 21 5 17 9"></polyline>
-                    <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
-                    <polyline points="7 23 3 19 7 15"></polyline>
-                    <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
-                  </svg>
-                </div>
-                <span class="exchange-label-text">1-on-1 Exchange</span>
-              </div>
+          <!-- Center: High-Impact Mission Statement Card -->
+          <div class="editorial-mission-card">
+            <h3>EMPOWERING LEARNERS, TRANSFORMING FUTURES</h3>
+            <p>
+              At CampusSkillConnect, we believe education should be accessible, engaging, and tailored to every learner.
+              Our mission is to bridge the gap between knowledge and opportunity, helping students and professionals
+              reach their full potential.
+            </p>
+          </div>
 
-              <!-- Student Card 2 -->
-              <div class="peer-card">
-                <div class="peer-header">
-                  <div class="peer-avatar" style="background-color: #E0E7FF; color: #4338CA;">P</div>
-                  <div>
-                    <div class="peer-name">Student B</div>
-                    <div class="peer-dept">Design & Multimedia &bull; 2nd Year</div>
-                  </div>
-                </div>
-                <div class="peer-skill-group">
-                  <div class="peer-skill-label">Can Teach</div>
-                  <div class="peer-tags">
-                    <span class="peer-tag tag-teaching">UI/UX Design</span>
-                    <span class="peer-tag tag-teaching">Figma Wireframing</span>
-                  </div>
-                </div>
-                <div class="peer-skill-group" style="margin-bottom: 0;">
-                  <div class="peer-skill-label">Wants to Learn</div>
-                  <div class="peer-tags">
-                    <span class="peer-tag tag-learning">Python for Automation</span>
-                  </div>
-                </div>
-              </div>
-
+          <!-- Right: Geometric Rhombus Art Tile -->
+          <div class="editorial-rhombus-art-block" aria-hidden="true">
+            <div class="rhombus-art-stacked">
+              <div class="rhombus-art-shape"></div>
+              <div class="rhombus-art-shape"></div>
             </div>
           </div>
         </div>
+
       </div>
     </section>
 
     <!-- ========================================================================
-         Features Section (3 concise cards)
+         Features Section (Designed for Campus Collaboration)
          ======================================================================== -->
     <section class="section section-alt" id="features">
       <div class="container">
         <div class="section-header">
-          <span class="section-tag">Core Features</span>
-          <h2 class="section-title">Designed for Campus Collaboration</h2>
+          <span class="section-tag">Core Capabilities</span>
+          <h2 class="section-title">Designed for Seamless Campus Collaboration</h2>
           <p class="section-desc">
             CampusSkillConnect makes learning from your peers structured, reciprocal, and straightforward.
           </p>
         </div>
 
-        <div class="grid grid-3">
+        <div class="row g-4">
           <!-- Feature Card 1 -->
-          <div class="feature-card">
-            <div class="feature-icon-wrapper">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 20h9"></path>
-                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-              </svg>
+          <div class="col-lg-4 col-md-6">
+            <div class="feature-card">
+              <div class="feature-icon-wrapper mb-3">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+              </div>
+              <h3 class="feature-title mb-2">Share Skills</h3>
+              <p class="feature-text text-secondary mb-0">
+                List the academic, technical, or creative skills you have mastered. Help fellow students overcome
+                obstacles while reinforcing your own mastery.
+              </p>
             </div>
-            <h3 class="feature-title">Share Skills</h3>
-            <p class="feature-text">
-              List the academic, technical, or creative skills you have mastered. Help fellow students overcome obstacles while reinforcing your own mastery.
-            </p>
           </div>
 
           <!-- Feature Card 2 -->
-          <div class="feature-card">
-            <div class="feature-icon-wrapper">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                <line x1="11" y1="8" x2="11" y2="14"></line>
-                <line x1="8" y1="11" x2="14" y2="11"></line>
-              </svg>
+          <div class="col-lg-4 col-md-6">
+            <div class="feature-card">
+              <div class="feature-icon-wrapper mb-3">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  <line x1="11" y1="8" x2="11" y2="14"></line>
+                  <line x1="8" y1="11" x2="14" y2="11"></line>
+                </svg>
+              </div>
+              <h3 class="feature-title mb-2">Find Your Match</h3>
+              <p class="feature-text text-secondary mb-0">
+                Discover student partners whose skill offerings match what you need to learn, creating balanced
+                reciprocal learning opportunities across departments.
+              </p>
             </div>
-            <h3 class="feature-title">Find Your Match</h3>
-            <p class="feature-text">
-              Discover student partners whose skill offerings match what you need to learn, creating balanced reciprocal learning opportunities across departments.
-            </p>
           </div>
 
           <!-- Feature Card 3 -->
-          <div class="feature-card">
-            <div class="feature-icon-wrapper">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
-              </svg>
+          <div class="col-lg-4 col-md-12">
+            <div class="feature-card">
+              <div class="feature-icon-wrapper mb-3">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+              </div>
+              <h3 class="feature-title mb-2">Learn Together</h3>
+              <p class="feature-text text-secondary mb-0">
+                Propose session dates and times, coordinate meeting locations on campus or online, and manage all
+                session requests in one clean dashboard.
+              </p>
             </div>
-            <h3 class="feature-title">Learn Together</h3>
-            <p class="feature-text">
-              Propose session dates and times, coordinate meeting locations on campus or online, and manage all session requests in one clean dashboard.
-            </p>
           </div>
         </div>
       </div>
@@ -238,32 +252,41 @@
           </p>
         </div>
 
-        <div class="steps-grid">
+        <div class="row g-4">
           <!-- Step 1 -->
-          <div class="step-card">
-            <div class="step-number">1</div>
-            <h3 class="step-title">Create Profile & List Skills</h3>
-            <p class="step-desc">
-              Sign up with your college email. Add the skills you are confident teaching, along with topics you want to learn this semester.
-            </p>
+          <div class="col-lg-4 col-md-6">
+            <div class="step-card h-100">
+              <div class="step-number mb-3">01</div>
+              <h3 class="step-title mb-2">Create Profile &amp; List Skills</h3>
+              <p class="step-desc text-secondary mb-0">
+                Sign up with your college email. Add the skills you are confident teaching, along with topics you want
+                to learn this semester.
+              </p>
+            </div>
           </div>
 
           <!-- Step 2 -->
-          <div class="step-card">
-            <div class="step-number">2</div>
-            <h3 class="step-title">Connect With Peer Matches</h3>
-            <p class="step-desc">
-              Browse compatible students whose needs align with your strengths. Review their academic year, department, and skill details.
-            </p>
+          <div class="col-lg-4 col-md-6">
+            <div class="step-card h-100">
+              <div class="step-number mb-3">02</div>
+              <h3 class="step-title mb-2">Connect With Peer Matches</h3>
+              <p class="step-desc text-secondary mb-0">
+                Browse compatible students whose needs align with your strengths. Review their academic year,
+                department, and skill details.
+              </p>
+            </div>
           </div>
 
           <!-- Step 3 -->
-          <div class="step-card">
-            <div class="step-number">3</div>
-            <h3 class="step-title">Schedule & Exchange</h3>
-            <p class="step-desc">
-              Send a session request with your preferred time and topic. Once accepted, meet up to learn, build projects, and grow together.
-            </p>
+          <div class="col-lg-4 col-md-12">
+            <div class="step-card h-100">
+              <div class="step-number mb-3">03</div>
+              <h3 class="step-title mb-2">Schedule &amp; Exchange</h3>
+              <p class="step-desc text-secondary mb-0">
+                Send a session request with your preferred time and topic. Once accepted, meet up to learn, build
+                projects, and grow together.
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -273,36 +296,37 @@
          About Section
          ======================================================================== -->
     <section class="section section-alt" id="about">
-      <div class="container">
-        <div style="max-width: 760px; margin: 0 auto; text-align: center;">
+      <div class="container text-center">
+        <div class="mx-auto" style="max-width: 760px;">
           <span class="section-tag">Student-Centered Learning</span>
           <h2 class="section-title">Bridging Campus Knowledge Gaps</h2>
-          <p class="section-desc" style="margin-bottom: 24px;">
-            Every student has unique knowledge to contribute. CampusSkillConnect transforms every campus into a vibrant, self-sustaining community where knowledge flows freely between semesters and disciplines.
+          <p class="section-desc mx-auto mb-4">
+            Every student has unique knowledge to contribute. CampusSkillConnect transforms every campus into a vibrant,
+            self-sustaining community where knowledge flows freely between semesters and disciplines.
           </p>
-          <a href="register.html" class="btn btn-primary" id="about-btn-join">Join Your Campus Network</a>
+          <a href="register.html" class="btn btn-primary btn-lg" id="about-btn-join">Join Your Campus Network &rarr;</a>
         </div>
       </div>
     </section>
   </main>
 
   <!-- ========================================================================
-       Minimal Footer
+       Minimalist Editorial Footer
        ======================================================================== -->
   <footer class="footer">
     <div class="container">
-      <div class="footer-top">
+      <div class="footer-top d-flex flex-wrap justify-content-between align-items-center gap-4">
         <a href="index.html" class="brand-logo">
-          <span class="brand-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          <span class="brand-rhombus-icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M11 3L3 11V13L11 21V3Z" fill="currentColor" />
+              <path d="M13 3L21 11V13L13 21V16L18 12L13 8V3Z" fill="currentColor" />
             </svg>
           </span>
           <span>CampusSkillConnect</span>
         </a>
 
-        <div class="footer-links">
+        <div class="footer-links d-flex gap-4">
           <a href="#how-it-works" class="footer-link">How It Works</a>
           <a href="#features" class="footer-link">Features</a>
           <a href="login.html" class="footer-link">Student Login</a>
@@ -310,12 +334,15 @@
         </div>
       </div>
 
-      <div class="footer-bottom">
-        <div>&copy; CampusSkillConnect — Peer-to-Peer Learning Exchange.</div>
-        <div>Built with HTML5, CSS3, &amp; Vanilla JavaScript.</div>
+      <div class="footer-bottom d-flex flex-wrap justify-content-between align-items-center gap-2 pt-4 mt-4 border-top">
+        <div class="text-secondary">&copy; CampusSkillConnect — Peer-to-Peer Learning Exchange.</div>
+        <div class="text-secondary">Built with HTML5, CSS3, &amp; Bootstrap 5.</div>
       </div>
     </div>
   </footer>
+
+  <!-- Bootstrap 5.3 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <script src="js/app.js"></script>
   <script>
@@ -330,4 +357,5 @@
     }
   </script>
 </body>
+
 </html>
