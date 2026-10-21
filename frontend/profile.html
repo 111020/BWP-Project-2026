@@ -169,6 +169,12 @@
               <div class="form-hint">College email serves as your verified student identifier.</div>
             </div>
 
+            <!-- Mobile Number -->
+            <div class="form-group">
+              <label class="form-label" for="prof-mobile">Mobile Number</label>
+              <input type="tel" id="prof-mobile" class="form-control" placeholder="Enter mobile number (e.g. +91...)">
+            </div>
+
             <!-- Department & Academic Year -->
             <div class="grid grid-2" style="gap: 16px;">
               <div class="form-group">
@@ -284,8 +290,9 @@
       const email = user.email || '';
       const dept = user.department || 'Computer Science';
       const year = user.academic_year ? formatAcademicYear(user.academic_year) : (user.year ? formatAcademicYear(user.year) : '3rd Year');
-      const bio = user.bio || '';
-      const goals = user.learningGoals || user.goals || '';
+      const mobile = user.mobile_number || user.mobile || '';
+      const bio = user.bio || user.about || '';
+      const goals = user.goals || user.learningGoals || '';
       const created = user.createdAt ? formatDate(user.createdAt) : 'Registered Member';
       const initial = (name || 'S').trim().charAt(0).toUpperCase() || 'S';
 
@@ -308,6 +315,8 @@
       if (profNameEl) profNameEl.value = name;
       const profEmailEl = document.getElementById('prof-email');
       if (profEmailEl) profEmailEl.value = email;
+      const profMobileEl = document.getElementById('prof-mobile');
+      if (profMobileEl) profMobileEl.value = mobile;
       const profBioEl = document.getElementById('prof-bio');
       if (profBioEl) profBioEl.value = bio;
       const profGoalsEl = document.getElementById('prof-goals');
@@ -359,6 +368,8 @@
       e.preventDefault();
 
       const name = document.getElementById('prof-name').value.trim();
+      const mobileEl = document.getElementById('prof-mobile');
+      const mobile_number = mobileEl ? mobileEl.value.trim() : '';
       const department = document.getElementById('prof-dept').value;
       const year = document.getElementById('prof-year').value;
       const bio = document.getElementById('prof-bio').value.trim();
@@ -377,7 +388,10 @@
         name,
         department,
         year,
+        mobile_number,
+        mobile: mobile_number,
         bio,
+        goals: learningGoals,
         learningGoals
       };
 
@@ -397,7 +411,7 @@
         populateProfileUI(updated);
         initAppLayout('profile');
       } else {
-        showToast(result.error || 'Failed to save changes to backend.', 'error');
+        showToast(result.error || (result.data && result.data.message) || 'Failed to save changes to backend.', 'error');
       }
     });
 

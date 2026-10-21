@@ -415,4 +415,199 @@ router.patch('/:id/status', requireAuth, async (req, res) => {
   }
 });
 
+/**
+ * GET /api/sessions/:id/export
+ * Downloads counterpart student contact details for an ACCEPTED session request as XML.
+ */
+router.get(['/:id/export', '/:id/export-xml'], requireAuth, async (req, res) => {
+  try {
+    const currentUserId = req.session.user.id;
+    const sessionId = parseInt(req.params.id, 10);
+
+    if (isNaN(sessionId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid session request ID.'
+      });
+    }
+
+    // 1. Fetch session request from database
+    const [rows] = await pool.execute(
+      `SELECT 
+        sr.id,
+        sr.requester_id,
+        sr.receiver_id,
+        sr.skill_id,
+        sr.status,
+        sr.proposed_datetime,
+        s.name AS skill_name
+       FROM session_requests sr
+       JOIN skills s ON sr.skill_id = s.id
+       WHERE sr.id = ?`,
+      [sessionId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Session request not found.'
+      });
+    }
+
+    const sessionReq = rows[0];
+
+    // 2. Authorization: Current user must be requester or receiver
+    const isRequester = Number(sessionReq.requester_id) === Number(currentUserId);
+    const isReceiver = Number(sessionReq.receiver_id) === Number(currentUserId);
+
+    if (!isRequester && !isReceiver) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not authorized to access details for this session request.'
+      });
+    }
+
+    // 3. Status restriction: ONLY 'accepted' status allows downloading contact profile
+    if (sessionReq.status !== 'accepted') {
+      return res.status(403).json({
+        success: false,
+        message: `Student contact details can only be downloaded for accepted sessions. Current session status is '${sessionReq.status}'.`
+      });
+    }
+
+    // 4. Fetch profiles of BOTH participants (requester and receiver)
+    const [userRows] = await pool.execute(
+      `SELECT 
+        id,
+        full_name,
+        email,
+        department,
+        academic_year,
+        mobile_number,
+        bio,
+        goals,
+        created_at
+       FROM users 
+       WHERE id IN (?, ?)`,
+      [sessionReq.requester_id, sessionReq.receiver_id]
+    );
+
+    const requesterUser = userRows.find(u => Number(u.id) === Number(sessionReq.requester_id));
+    const receiverUser = userRows.find(u => Number(u.id) === Number(sessionReq.receiver_id));
+
+    if (!requesterUser || !receiverUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'One or both participant student profiles were not found in database.'
+      });
+    }
+
+    // 5. XML escaping helper
+    const esc = (val) => String(val || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+
+    function formatAcademicYear(year) {
+      switch (Number(year)) {
+        case 1: return '1st Year';
+        case 2: return '2nd Year';
+        case 3: return '3rd Year';
+        case 4: return '4th Year';
+        case 5: return 'Postgraduate';
+        default: return year ? `${year}th Year` : 'Student';
+      }
+    }
+
+    function buildStudentProfileXml(student, roleTitle) {
+      return [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<StudentProfile>',
+        `  <StudentID>${student.id}</StudentID>`,
+        `  <Role>${roleTitle}</Role>`,
+        `  <FullName>${esc(student.full_name)}</FullName>`,
+        `  <Email>${esc(student.email)}</Email>`,
+        `  <MobileNumber>${esc(student.mobile_number || 'Not Provided')}</MobileNumber>`,
+        `  <Department>${esc(student.department)}</Department>`,
+        `  <AcademicYear>${formatAcademicYear(student.academic_year)}</AcademicYear>`,
+        `  <Bio>${esc(student.bio || '')}</Bio>`,
+        `  <LearningGoals>${esc(student.goals || '')}</LearningGoals>`,
+        `  <RelevantSkill>${esc(sessionReq.skill_name)}</RelevantSkill>`,
+        `  <SessionID>${sessionReq.id}</SessionID>`,
+        `  <SessionStatus>${esc(sessionReq.status)}</SessionStatus>`,
+        `  <ProposedDateTime>${sessionReq.proposed_datetime ? new Date(sessionReq.proposed_datetime).toISOString() : ''}</ProposedDateTime>`,
+        `  <RegisteredAt>${student.created_at ? new Date(student.created_at).toISOString() : ''}</RegisteredAt>`,
+        '</StudentProfile>'
+      ].join('\n');
+    }
+
+    // 6. Select profile based on target parameter:
+    // target can be 'counterpart' (default), 'requester', 'receiver'/'acceptor', or 'both'
+    const target = (req.query.target || 'counterpart').toLowerCase();
+    let xml = '';
+    let filename = '';
+
+    if (target === 'both') {
+      filename = `Session_${sessionReq.id}_Both_Students.xml`;
+      xml = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<SessionExchange>',
+        '  <SessionDetails>',
+        `    <SessionID>${sessionReq.id}</SessionID>`,
+        `    <Skill>${esc(sessionReq.skill_name)}</Skill>`,
+        `    <Status>${esc(sessionReq.status)}</Status>`,
+        `    <ProposedDateTime>${sessionReq.proposed_datetime ? new Date(sessionReq.proposed_datetime).toISOString() : ''}</ProposedDateTime>`,
+        '  </SessionDetails>',
+        '  <RequesterProfile>',
+        `    <StudentID>${requesterUser.id}</StudentID>`,
+        `    <FullName>${esc(requesterUser.full_name)}</FullName>`,
+        `    <Email>${esc(requesterUser.email)}</Email>`,
+        `    <MobileNumber>${esc(requesterUser.mobile_number || 'Not Provided')}</MobileNumber>`,
+        `    <Department>${esc(requesterUser.department)}</Department>`,
+        `    <AcademicYear>${formatAcademicYear(requesterUser.academic_year)}</AcademicYear>`,
+        `    <Bio>${esc(requesterUser.bio || '')}</Bio>`,
+        `    <LearningGoals>${esc(requesterUser.goals || '')}</LearningGoals>`,
+        '  </RequesterProfile>',
+        '  <AcceptorProfile>',
+        `    <StudentID>${receiverUser.id}</StudentID>`,
+        `    <FullName>${esc(receiverUser.full_name)}</FullName>`,
+        `    <Email>${esc(receiverUser.email)}</Email>`,
+        `    <MobileNumber>${esc(receiverUser.mobile_number || 'Not Provided')}</MobileNumber>`,
+        `    <Department>${esc(receiverUser.department)}</Department>`,
+        `    <AcademicYear>${formatAcademicYear(receiverUser.academic_year)}</AcademicYear>`,
+        `    <Bio>${esc(receiverUser.bio || '')}</Bio>`,
+        `    <LearningGoals>${esc(receiverUser.goals || '')}</LearningGoals>`,
+        '  </AcceptorProfile>',
+        '</SessionExchange>'
+      ].join('\n');
+    } else if (target === 'requester') {
+      filename = `Requester_Profile_${requesterUser.id}.xml`;
+      xml = buildStudentProfileXml(requesterUser, 'Requester');
+    } else if (target === 'receiver' || target === 'acceptor') {
+      filename = `Acceptor_Profile_${receiverUser.id}.xml`;
+      xml = buildStudentProfileXml(receiverUser, 'Acceptor');
+    } else {
+      // Default: counterpart profile (requester gets receiver, receiver gets requester)
+      const counterpartUser = isRequester ? receiverUser : requesterUser;
+      const roleTitle = isRequester ? 'Acceptor' : 'Requester';
+      filename = `Student_Profile_${counterpartUser.id}.xml`;
+      xml = buildStudentProfileXml(counterpartUser, roleTitle);
+    }
+
+    // 7. Set headers and send XML response
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    return res.status(200).send(xml);
+
+  } catch (error) {
+    console.error('Error generating session participant XML:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to generate student details XML.'
+    });
+  }
+});
+
 module.exports = router;

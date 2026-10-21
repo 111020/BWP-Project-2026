@@ -129,6 +129,55 @@
     </main>
   </div>
 
+  <!-- Student XML Details Modal -->
+  <div class="modal-overlay" id="modal-xml-viewer">
+    <div class="modal-box" style="max-width: 680px; width: 95%;">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title" id="modal-xml-title">Student Profile XML</h3>
+          <div class="text-xs text-secondary" id="modal-xml-subtitle">Exported contact details for accepted peer session</div>
+        </div>
+        <button class="modal-close" data-modal-close>&times;</button>
+      </div>
+      <div class="modal-body" style="padding-top: 10px;">
+        <!-- Profile Role Segment Tabs -->
+        <div style="display: flex; gap: 8px; margin-bottom: 12px; background: var(--bg-primary); padding: 4px; border-radius: 8px; border: 1px solid var(--border-color); flex-wrap: wrap;">
+          <button type="button" class="btn btn-sm btn-primary xml-tab-btn" id="tab-xml-partner" style="flex: 1; min-width: 140px; font-size: 0.82rem; padding: 6px 12px;">
+            👤 Partner Profile (XML)
+          </button>
+          <button type="button" class="btn btn-sm btn-outline xml-tab-btn" id="tab-xml-me" style="flex: 1; min-width: 140px; font-size: 0.82rem; padding: 6px 12px;">
+            🎓 My Profile (XML)
+          </button>
+          <button type="button" class="btn btn-sm btn-outline xml-tab-btn" id="tab-xml-both" style="flex: 1; min-width: 140px; font-size: 0.82rem; padding: 6px 12px;">
+            👥 Both Profiles (XML)
+          </button>
+        </div>
+
+        <!-- Action Toolbar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 8px; flex-wrap: wrap;">
+          <span class="text-xs text-muted" id="modal-xml-status" style="font-family: monospace; font-weight: 600;">File: Student_Profile.xml</span>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn btn-outline btn-xs" id="btn-copy-xml">
+              📋 Copy XML
+            </button>
+            <button type="button" class="btn btn-outline btn-xs" id="btn-open-tab-xml">
+              🌐 Open in New Tab
+            </button>
+            <button type="button" class="btn btn-primary btn-xs" id="btn-redownload-xml">
+              ⬇️ Save .xml File
+            </button>
+          </div>
+        </div>
+
+        <!-- XML Syntax Box -->
+        <pre id="modal-xml-content" style="background: #181b26; color: #79c0ff; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 16px; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.84rem; line-height: 1.48; max-height: 380px; overflow: auto; white-space: pre; margin: 0;"></pre>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end;">
+        <button type="button" class="btn btn-outline btn-sm" data-modal-close>Close</button>
+      </div>
+    </div>
+  </div>
+
   <script src="js/app.js?v=2"></script>
   <script>
     if (requireAuth()) {
@@ -216,11 +265,13 @@
         const mode = session.mode || 'In-person';
         const message = session.message || session.notes || '';
 
-        // Determine if user is sender or receiver
-        const isRequester = session.requesterId === currentUserId || session.senderId === currentUserId || session.isRequester;
+        // Determine if user is sender or receiver (trust backend calculation first)
+        const isRequester = typeof session.isRequester === 'boolean'
+          ? session.isRequester
+          : (Number(session.requesterId) === Number(currentUser.id));
         const partnerName = session.partnerName || (isRequester ? (session.receiverName || 'Peer Tutor') : (session.senderName || 'Peer Learner'));
         const partnerDept = session.partnerDept || session.department || 'Student';
-        const role = session.role || (isRequester ? 'You are Learning' : 'You are Teaching');
+        const role = isRequester ? 'Sent Request' : 'Received Request';
 
         html += `
           <div class="card" style="padding: 22px;">
@@ -228,10 +279,10 @@
               <div>
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
                   <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">${escapeHtml(skillName)}</h3>
-                  <span class="badge ${role.includes('Teaching') ? 'badge-accent' : 'badge-info'}">${escapeHtml(role)}</span>
+                  <span class="badge ${isRequester ? 'badge-info' : 'badge-accent'}">${escapeHtml(role)}</span>
                 </div>
                 <div class="text-xs text-secondary">
-                  Partner: <strong>${escapeHtml(partnerName)}</strong> (${escapeHtml(partnerDept)})
+                  ${isRequester ? 'Requested from' : 'Request from'}: <strong>${escapeHtml(partnerName)}</strong> (${escapeHtml(partnerDept)})
                 </div>
               </div>
 
@@ -288,7 +339,15 @@
           }
         } else if (status === 'accepted') {
           html += `
-            <button class="btn btn-primary btn-sm btn-session-action" data-id="${escapeHtml(id)}" data-action="completed">
+            <button type="button" class="btn btn-outline btn-sm btn-export-session-xml" data-id="${escapeHtml(id)}" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600;" title="Download student contact details as XML">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Download Student Details (XML)
+            </button>
+            <button type="button" class="btn btn-primary btn-sm btn-session-action" data-id="${escapeHtml(id)}" data-action="completed">
               ✓ Mark as Completed
             </button>
           `;
@@ -311,6 +370,195 @@
           await updateSessionStatus(sessionId, newStatus);
         });
       });
+
+      // Attach XML export listeners
+      container.querySelectorAll('.btn-export-session-xml').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const sessionId = e.currentTarget.getAttribute('data-id');
+          await downloadSessionXml(sessionId, e.currentTarget);
+        });
+      });
+    }
+
+    let activeXmlSessionId = null;
+    let activeXmlCache = {};
+    let activeXmlText = '';
+    let activeXmlFilename = '';
+
+    async function downloadSessionXml(sessionId, triggerBtn) {
+      if (!sessionId) return;
+      const originalHtml = triggerBtn ? triggerBtn.innerHTML : '';
+      if (triggerBtn) {
+        triggerBtn.disabled = true;
+        triggerBtn.innerHTML = 'Opening XML...';
+      }
+
+      activeXmlSessionId = sessionId;
+      activeXmlCache = {};
+
+      const currentUser = getAuthUser() || {};
+      const session = allSessions.find(s => String(s.id || s._id) === String(sessionId)) || {};
+      const isRequester = typeof session.isRequester === 'boolean'
+        ? session.isRequester
+        : (Number(session.requesterId) === Number(currentUser.id));
+
+      const partnerRole = isRequester ? 'Acceptor' : 'Requester';
+      const myRole = isRequester ? 'Requester' : 'Acceptor';
+
+      const tabPartner = document.getElementById('tab-xml-partner');
+      const tabMe = document.getElementById('tab-xml-me');
+      const tabBoth = document.getElementById('tab-xml-both');
+
+      if (tabPartner) tabPartner.innerHTML = `👤 Partner Profile (${partnerRole})`;
+      if (tabMe) tabMe.innerHTML = `🎓 My Profile (${myRole})`;
+      if (tabBoth) tabBoth.innerHTML = `👥 Both Profiles (XML)`;
+
+      async function loadXmlForTarget(targetKey, shouldDownload = false) {
+        // Update tab styling
+        [
+          { key: 'partner', el: tabPartner },
+          { key: 'me', el: tabMe },
+          { key: 'both', el: tabBoth }
+        ].forEach(item => {
+          if (!item.el) return;
+          if (item.key === targetKey) {
+            item.el.className = 'btn btn-sm btn-primary xml-tab-btn';
+          } else {
+            item.el.className = 'btn btn-sm btn-outline xml-tab-btn';
+          }
+        });
+
+        const contentEl = document.getElementById('modal-xml-content');
+        const statusEl = document.getElementById('modal-xml-status');
+        if (contentEl) contentEl.textContent = 'Loading XML profile from server...';
+
+        try {
+          if (!activeXmlCache[targetKey]) {
+            const token = getAuthToken();
+            const headers = { 'Accept': 'application/xml, text/xml, */*' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            let targetQuery = '';
+            if (targetKey === 'both') {
+              targetQuery = '?target=both';
+            } else if (targetKey === 'me') {
+              targetQuery = `?target=${isRequester ? 'requester' : 'receiver'}`;
+            }
+
+            const response = await fetch(`${getApiBase()}/sessions/${sessionId}/export${targetQuery}`, {
+              method: 'GET',
+              credentials: 'include',
+              headers: headers
+            });
+
+            if (!response.ok) {
+              let errorMsg = 'Failed to download student details XML.';
+              try {
+                const errorJson = await response.json();
+                if (errorJson && errorJson.message) errorMsg = errorJson.message;
+              } catch (e) {}
+              throw new Error(errorMsg);
+            }
+
+            const xmlText = await response.text();
+            let filename = `Student_Profile_${sessionId}.xml`;
+            const disposition = response.headers.get('Content-Disposition');
+            if (disposition && disposition.includes('filename=')) {
+              const match = disposition.match(/filename=["']?([^"';]+)["']?/i);
+              if (match && match[1]) filename = match[1].trim();
+            }
+            if (!filename.toLowerCase().endsWith('.xml')) filename += '.xml';
+
+            activeXmlCache[targetKey] = { xmlText, filename };
+          }
+
+          const currentData = activeXmlCache[targetKey];
+          activeXmlText = currentData.xmlText;
+          activeXmlFilename = currentData.filename;
+
+          if (contentEl) contentEl.textContent = activeXmlText;
+          if (statusEl) statusEl.textContent = `File: ${activeXmlFilename}`;
+
+          if (shouldDownload) {
+            triggerFileDownload(activeXmlFilename, activeXmlText);
+            showToast(`Downloaded ${activeXmlFilename} successfully!`, 'success');
+          }
+        } catch (err) {
+          console.error('Session XML load error:', err);
+          if (contentEl) contentEl.textContent = 'Error: ' + (err.message || 'Network error');
+          showToast(err.message || 'Error loading XML details.', 'error');
+        }
+      }
+
+      function triggerFileDownload(filename, text) {
+        const dataUri = 'data:application/xml;charset=utf-8,' + encodeURIComponent(text);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = dataUri;
+        a.setAttribute('download', filename);
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          if (document.body.contains(a)) document.body.removeChild(a);
+        }, 1000);
+      }
+
+      // Attach tab click listeners
+      if (tabPartner) tabPartner.onclick = () => loadXmlForTarget('partner', false);
+      if (tabMe) tabMe.onclick = () => loadXmlForTarget('me', false);
+      if (tabBoth) tabBoth.onclick = () => loadXmlForTarget('both', false);
+
+      // Attach Action Toolbar listeners
+      const btnCopy = document.getElementById('btn-copy-xml');
+      const btnOpenTab = document.getElementById('btn-open-tab-xml');
+      const btnRedownload = document.getElementById('btn-redownload-xml');
+
+      if (btnCopy) {
+        btnCopy.onclick = async () => {
+          if (!activeXmlText) return;
+          try {
+            await navigator.clipboard.writeText(activeXmlText);
+            showToast('XML copied to clipboard!', 'success');
+          } catch (e) {
+            showToast('Failed to copy XML to clipboard.', 'error');
+          }
+        };
+      }
+
+      if (btnOpenTab) {
+        btnOpenTab.onclick = () => {
+          if (!activeXmlText) return;
+          const w = window.open('', '_blank');
+          if (w) {
+            w.document.open();
+            w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(activeXmlFilename)}</title><style>body{margin:0;background:#0d1117;color:#79c0ff;padding:24px;font-family:'Consolas','Courier New',monospace;font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-all;}</style></head><body>${escapeHtml(activeXmlText)}</body></html>`);
+            w.document.close();
+          } else {
+            showToast('Popup was blocked by your browser. Please allow popups.', 'error');
+          }
+        };
+      }
+
+      if (btnRedownload) {
+        btnRedownload.onclick = () => {
+          if (!activeXmlText || !activeXmlFilename) return;
+          triggerFileDownload(activeXmlFilename, activeXmlText);
+          showToast(`Saved ${activeXmlFilename}`, 'success');
+        };
+      }
+
+      try {
+        // Open the modal immediately so the user sees the XML right away
+        openModal('modal-xml-viewer');
+        // Load the partner XML by default and download it
+        await loadXmlForTarget('partner', true);
+      } finally {
+        if (triggerBtn) {
+          triggerBtn.disabled = false;
+          triggerBtn.innerHTML = originalHtml;
+        }
+      }
     }
 
     async function updateSessionStatus(sessionId, status) {

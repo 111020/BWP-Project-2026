@@ -211,7 +211,7 @@ router.get('/me', async (req, res) => {
     }
 
     const [rows] = await pool.execute(
-      'SELECT id, full_name, email, department, academic_year, created_at FROM users WHERE id = ? LIMIT 1',
+      'SELECT id, full_name, email, department, academic_year, mobile_number, bio, goals, created_at FROM users WHERE id = ? LIMIT 1',
       [userId]
     );
 
@@ -231,6 +231,11 @@ router.get('/me', async (req, res) => {
       department: student.department,
       year: student.academic_year,
       academic_year: student.academic_year,
+      mobile_number: student.mobile_number || '',
+      mobile: student.mobile_number || '',
+      bio: student.bio || '',
+      goals: student.goals || '',
+      learningGoals: student.goals || '',
       createdAt: student.created_at
     };
 

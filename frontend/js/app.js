@@ -560,8 +560,9 @@ async function initAppLayout(activePageName) {
   // 3. Highlight active link and ensure nav links bypass stale browser cache
   document.querySelectorAll('a.nav-menu-link').forEach(link => {
     const href = link.getAttribute('href');
-    if (href && href.endsWith('.html')) {
-      link.setAttribute('href', `${href}?v=2`);
+    if (href && (href.endsWith('.html') || href.includes('.html?'))) {
+      const base = href.split('?')[0];
+      link.setAttribute('href', `${base}?v=4`);
     }
   });
 

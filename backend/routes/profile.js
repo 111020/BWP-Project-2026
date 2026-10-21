@@ -22,7 +22,7 @@ async function requireAuth(req, res, next) {
     if (userId) {
       try {
         const [rows] = await pool.execute(
-          'SELECT id, full_name, email, department, academic_year FROM users WHERE id = ? LIMIT 1',
+          'SELECT id, full_name, email, department, academic_year, mobile_number, bio, goals FROM users WHERE id = ? LIMIT 1',
           [userId]
         );
         if (rows.length > 0) {
@@ -34,7 +34,10 @@ async function requireAuth(req, res, next) {
             email: s.email,
             department: s.department,
             year: s.academic_year,
-            academic_year: s.academic_year
+            academic_year: s.academic_year,
+            mobile_number: s.mobile_number || '',
+            bio: s.bio || '',
+            goals: s.goals || ''
           };
           return next();
         }
@@ -78,7 +81,7 @@ function formatYear(year) {
 router.get('/', requireAuth, async (req, res) => {
   try {
     const [rows] = await pool.execute(
-      'SELECT id, full_name, email, department, academic_year, created_at FROM users WHERE id = ? LIMIT 1',
+      'SELECT id, full_name, email, department, academic_year, mobile_number, bio, goals, created_at FROM users WHERE id = ? LIMIT 1',
       [req.session.user.id]
     );
     if (rows.length === 0) {
@@ -93,8 +96,11 @@ router.get('/', requireAuth, async (req, res) => {
       department: s.department,
       year: formatYear(s.academic_year),
       academic_year: s.academic_year,
-      bio: '',
-      learningGoals: '',
+      mobile_number: s.mobile_number || '',
+      mobile: s.mobile_number || '',
+      bio: s.bio || '',
+      goals: s.goals || '',
+      learningGoals: s.goals || '',
       createdAt: s.created_at
     };
     return res.status(200).json({ success: true, user: profile, profile: profile });
@@ -106,29 +112,67 @@ router.get('/', requireAuth, async (req, res) => {
 
 /**
  * PUT /api/profile
- * Updates full_name, department, and academic_year for the authenticated student.
+ * Updates student profile including mobile_number, bio, and goals.
  */
 router.put('/', requireAuth, async (req, res) => {
   try {
-    const { name, full_name, department, year, academic_year } = req.body;
-    const studentName = (full_name || name || '').trim();
-    const studentDept = (department || '').trim();
-    const parsedYear = parseYearToInt(academic_year || year);
+    // 1. Fetch existing profile to prevent overwriting omitted fields
+    const [existingRows] = await pool.execute(
+      'SELECT id, full_name, email, department, academic_year, mobile_number, bio, goals, created_at FROM users WHERE id = ? LIMIT 1',
+      [req.session.user.id]
+    );
+    if (existingRows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Profile not found.' });
+    }
+    const existing = existingRows[0];
 
+    const { name, full_name, department, year, academic_year } = req.body;
+    const studentName = (full_name !== undefined ? full_name : (name !== undefined ? name : existing.full_name)).trim();
     if (!studentName) {
       return res.status(400).json({ success: false, message: 'Full name is required.' });
     }
 
+    const studentDept = department !== undefined ? String(department).trim() : existing.department;
+    const parsedYear = (academic_year !== undefined || year !== undefined)
+      ? parseYearToInt(academic_year || year)
+      : existing.academic_year;
+
+    // Mobile Number: allow empty, null, or string up to 20 chars
+    let mobileNumber = existing.mobile_number;
+    const incomingMobile = req.body.mobile_number !== undefined ? req.body.mobile_number : req.body.mobile;
+    if (incomingMobile !== undefined) {
+      const cleanMobile = incomingMobile ? String(incomingMobile).trim() : '';
+      mobileNumber = cleanMobile.length > 0 ? cleanMobile.slice(0, 20) : null;
+    }
+
+    // Bio: allow empty or null
+    let bio = existing.bio;
+    const incomingBio = req.body.bio !== undefined ? req.body.bio : req.body.about;
+    if (incomingBio !== undefined) {
+      const cleanBio = incomingBio ? String(incomingBio).trim() : '';
+      bio = cleanBio.length > 0 ? cleanBio : null;
+    }
+
+    // Goals: allow empty or null
+    let goals = existing.goals;
+    const incomingGoals = req.body.goals !== undefined ? req.body.goals : req.body.learningGoals;
+    if (incomingGoals !== undefined) {
+      const cleanGoals = incomingGoals ? String(incomingGoals).trim() : '';
+      goals = cleanGoals.length > 0 ? cleanGoals : null;
+    }
+
+    // Parameterized update of all profile fields
     await pool.execute(
-      'UPDATE users SET full_name = ?, department = ?, academic_year = ? WHERE id = ?',
-      [studentName, studentDept, parsedYear, req.session.user.id]
+      'UPDATE users SET full_name = ?, department = ?, academic_year = ?, mobile_number = ?, bio = ?, goals = ? WHERE id = ?',
+      [studentName, studentDept, parsedYear, mobileNumber, bio, goals, req.session.user.id]
     );
 
-    const [rows] = await pool.execute(
-      'SELECT id, full_name, email, department, academic_year, created_at FROM users WHERE id = ? LIMIT 1',
+    // Fetch refreshed row from database
+    const [updatedRows] = await pool.execute(
+      'SELECT id, full_name, email, department, academic_year, mobile_number, bio, goals, created_at FROM users WHERE id = ? LIMIT 1',
       [req.session.user.id]
     );
-    const s = rows[0];
+    const s = updatedRows[0];
     const updated = {
       id: s.id,
       name: s.full_name,
@@ -137,16 +181,28 @@ router.put('/', requireAuth, async (req, res) => {
       department: s.department,
       year: formatYear(s.academic_year),
       academic_year: s.academic_year,
-      bio: req.body.bio || '',
-      learningGoals: req.body.learningGoals || '',
+      mobile_number: s.mobile_number || '',
+      mobile: s.mobile_number || '',
+      bio: s.bio || '',
+      goals: s.goals || '',
+      learningGoals: s.goals || '',
       createdAt: s.created_at
     };
+
     req.session.user = {
-      id: s.id, name: s.full_name, full_name: s.full_name,
-      email: s.email, department: s.department,
-      year: s.academic_year, academic_year: s.academic_year
+      id: s.id,
+      name: s.full_name,
+      full_name: s.full_name,
+      email: s.email,
+      department: s.department,
+      year: s.academic_year,
+      academic_year: s.academic_year,
+      mobile_number: s.mobile_number || '',
+      bio: s.bio || '',
+      goals: s.goals || ''
     };
-    return res.status(200).json({ success: true, message: 'Profile updated.', user: updated, profile: updated });
+
+    return res.status(200).json({ success: true, message: 'Profile updated successfully.', user: updated, profile: updated });
   } catch (err) {
     console.error('PUT /profile error:', err);
     return res.status(500).json({ success: false, message: 'Failed to update profile.' });

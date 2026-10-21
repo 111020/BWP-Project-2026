@@ -186,8 +186,11 @@
           <div class="form-group">
             <label class="form-label" for="req-mode">Meeting Preference <span class="required">*</span></label>
             <select id="req-mode" class="form-select" required>
-              <option value="In-person Campus Library">In-person (Campus Library)</option>
-              <option value="In-person Department Lab">In-person (Department Lab / Common Room)</option>
+              <option value="In-person (Campus Library)">In-person (Campus Library)</option>
+              <option value="High Computing Lab">High Computing Lab</option>
+              <option value="Core Computing Lab">Core Computing Lab</option>
+              <option value="New Lab 1st Floor">New Lab 1st Floor</option>
+              <option value="Matrix Lab 1st Floor">Matrix Lab 1st Floor</option>
               <option value="Online Video Call">Online Video Call (Google Meet / Zoom)</option>
             </select>
           </div>
@@ -368,9 +371,18 @@
         btn.addEventListener('click', (e) => {
           const b = e.currentTarget;
           document.getElementById('req-partner-id').value = b.getAttribute('data-partner-id');
-          document.getElementById('req-partner-name').textContent = b.getAttribute('data-partner-name');
-          document.getElementById('modal-partner-avatar').textContent = (b.getAttribute('data-partner-name') || 'P').charAt(0).toUpperCase();
-          document.getElementById('modal-partner-dept').textContent = b.getAttribute('data-partner-dept');
+          const partnerNameEl = document.getElementById('modal-partner-name') || document.getElementById('req-partner-name');
+          if (partnerNameEl) {
+            partnerNameEl.textContent = b.getAttribute('data-partner-name');
+          }
+          const partnerAvatarEl = document.getElementById('modal-partner-avatar');
+          if (partnerAvatarEl) {
+            partnerAvatarEl.textContent = (b.getAttribute('data-partner-name') || 'P').charAt(0).toUpperCase();
+          }
+          const partnerDeptEl = document.getElementById('modal-partner-dept');
+          if (partnerDeptEl) {
+            partnerDeptEl.textContent = b.getAttribute('data-partner-dept');
+          }
           document.getElementById('req-skill-id').value = b.getAttribute('data-skill-id') || '';
           document.getElementById('req-skill-name').value = b.getAttribute('data-skill-name');
           openModal('modal-request-session');
@@ -455,8 +467,8 @@
         closeModal('modal-request-session');
         showToast('Session request sent to peer!', 'success');
         setTimeout(() => {
-          window.location.href = 'sessions.html';
-        }, 1000);
+          window.location.href = 'sessions.html?v=4';
+        }, 800);
       } else {
         showToast(result.error || 'Failed to submit session request to backend.', 'error');
       }

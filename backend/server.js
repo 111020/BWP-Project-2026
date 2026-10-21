@@ -24,7 +24,8 @@ app.use(cors({
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true
+  credentials: true,
+  exposedHeaders: ['Content-Disposition']
 }));
 
 // Enable JSON and URL-encoded request body parsing
@@ -44,28 +45,29 @@ app.use(session({
   }
 }));
 
-// Global middleware to support both session cookies AND Bearer tokens across all routes
+// Global middleware to support both session cookies AND Bearer tokens across all routes,
+// ensuring accurate account separation when switching accounts on the same device.
 app.use(async (req, res, next) => {
-  if (req.session && req.session.user && req.session.user.id) {
-    return next();
-  }
-
   const authHeader = req.headers.authorization;
+  let tokenUserId = null;
+
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.slice(7).trim();
-    let userId = null;
     const match = token.match(/^session_(\d+)/);
     if (match) {
-      userId = parseInt(match[1], 10);
+      tokenUserId = parseInt(match[1], 10);
     } else if (/^\d+$/.test(token)) {
-      userId = parseInt(token, 10);
+      tokenUserId = parseInt(token, 10);
     }
+  }
 
-    if (userId) {
+  // If a valid Bearer token exists, ensure req.session.user reflects the active token user
+  if (tokenUserId) {
+    if (!req.session.user || Number(req.session.user.id) !== Number(tokenUserId)) {
       try {
         const [rows] = await pool.execute(
           'SELECT id, full_name, email, department, academic_year FROM users WHERE id = ? LIMIT 1',
-          [userId]
+          [tokenUserId]
         );
         if (rows.length > 0) {
           const student = rows[0];
